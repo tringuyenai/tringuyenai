@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hệ Thống Trắc Nghiệm NLS (Hồi Sức Sau Sinh)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .app-view {
+            transition: opacity 0.3s ease;
+        }
+        button {
+            touch-action: manipulation;
+        }
+        .option-btn, .chapter-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:hover:not(:disabled), .chapter-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        @media (hover: none) {
+            .option-btn:hover:not(:disabled), .chapter-btn:hover:not(:disabled) {
+                transform: none;
+                box-shadow: none;
+            }
+        }
+        .correct-anim { animation: pulse-green 0.5s; }
+        .wrong-anim { animation: shake 0.5s; }
+        
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .feedback-enter { animation: slideInDown 0.4s ease forwards; }
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Circular Chart */
+        .circular-chart { display: block; margin: 0 auto; max-width: 80%; max-height: 250px; }
+        .circle-bg { fill: none; stroke: #e5e7eb; stroke-width: 3.8; }
+        .circle { fill: none; stroke-width: 2.8; stroke-linecap: round; animation: progress 1s ease-out forwards; }
+        @keyframes progress { 0% { stroke-dasharray: 0 100; } }
+        .percentage { fill: #1f2937; font-family: inherit; font-weight: bold; font-size: 0.5em; text-anchor: middle; }
+        .fraction { fill: #6b7280; font-family: inherit; font-size: 0.25em; text-anchor: middle; }
+        
+        .score-excellent .circle { stroke: #10b981; }
+        .score-good .circle { stroke: #3b82f6; }
+        .score-poor .circle { stroke: #ef4444; }
+        
+        /* Custom grid cho Home screen */
+        .chapter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+        @media (min-width: 640px) {
+            .chapter-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 p-2 sm:p-4 md:p-8 flex items-start sm:items-center justify-center">
+
+    <div id="app" class="w-full max-w-4xl mx-auto py-4 sm:py-0">
+        
+        <!-- ==================== HOME VIEW ==================== -->
+        <div id="homeView" class="app-view bg-white rounded-xl md:rounded-2xl shadow-lg md:shadow-xl overflow-hidden p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-8 sm:mb-10">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 mb-4">
+                    <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477-4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-900 mb-3 leading-tight">Hệ Thống Trắc Nghiệm NLS</h1>
+                <p class="text-base sm:text-lg text-gray-600">Khóa Hồi Sức Sau Sinh (Newborn Life Support)</p>
+            </header>
+
+            <div class="mb-8">
+                <button onclick="startRandomFullTest()" class="w-full py-4 sm:py-5 px-6 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-lg sm:text-xl font-bold rounded-xl shadow-lg transform transition-all hover:-translate-y-1 hover:shadow-xl flex items-center justify-center gap-3">
+                    <svg class="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                    BỘ ĐỀ TỔNG HỢP (50 Câu Ngẫu Nhiên)
+                </button>
+                <p class="text-center text-sm text-gray-500 mt-3 italic">Trộn ngẫu nhiên từ toàn bộ kho dữ liệu 13 chương.</p>
+            </div>
+
+            <div class="relative flex py-5 items-center">
+                <div class="flex-grow border-t border-gray-300"></div>
+                <span class="flex-shrink-0 mx-4 text-gray-500 font-medium">Hoặc chọn ôn theo từng chương</span>
+                <div class="flex-grow border-t border-gray-300"></div>
+            </div>
+
+            <div id="chapterGrid" class="chapter-grid mt-6">
+                <!-- Buttons will be generated by JS -->
+            </div>
+        </div>
+
+        <!-- ==================== QUIZ VIEW ==================== -->
+        <div id="quizArea" class="hidden app-view bg-white rounded-xl md:rounded-2xl shadow-lg md:shadow-xl overflow-hidden">
+            <!-- Header Top Bar -->
+            <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+                <button onclick="goHome()" class="text-gray-600 hover:text-blue-600 font-medium flex items-center gap-1 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    Trang chủ
+                </button>
+                <span id="quizTitleBadge" class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide"></span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 h-1.5 md:h-2">
+                <div id="progressBar" class="bg-blue-600 h-1.5 md:h-2 transition-all duration-500 ease-out" style="width: 0%;"></div>
+            </div>
+
+            <div class="p-4 sm:p-6 md:p-10">
+                <div class="flex justify-between items-center mb-5 md:mb-6 text-xs sm:text-sm font-semibold text-gray-500 tracking-wider">
+                    <span id="questionCounter">Câu 1 / X</span>
+                </div>
+
+                <h2 id="questionText" class="text-lg sm:text-xl md:text-2xl font-medium leading-relaxed mb-6 sm:mb-8 text-gray-800">
+                    Đang tải câu hỏi...
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <button id="btnTrue" onclick="checkAnswer(true)" class="option-btn relative w-full py-3.5 sm:py-4 text-base sm:text-lg font-bold rounded-lg sm:rounded-xl border-2 border-gray-200 bg-white text-gray-700 hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                        1. ĐÚNG
+                    </button>
+                    <button id="btnFalse" onclick="checkAnswer(false)" class="option-btn relative w-full py-3.5 sm:py-4 text-base sm:text-lg font-bold rounded-lg sm:rounded-xl border-2 border-gray-200 bg-white text-gray-700 hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                        2. SAI
+                    </button>
+                </div>
+
+                <div id="feedbackArea" class="hidden feedback-enter rounded-lg sm:rounded-xl p-4 sm:p-5 mb-5 md:mb-6 border-l-4">
+                    <div class="flex items-start">
+                        <div id="feedbackIcon" class="flex-shrink-0 mt-0.5"></div>
+                        <div class="ml-3 w-full">
+                            <h3 id="feedbackTitle" class="text-base sm:text-lg font-bold mb-1"></h3>
+                            <p id="feedbackRationale" class="text-sm sm:text-base text-gray-700 mb-3 leading-relaxed"></p>
+                            
+                            <div class="bg-white bg-opacity-50 rounded-lg p-2.5 sm:p-3 text-xs sm:text-sm italic text-gray-600 border border-gray-200">
+                                <strong>💡 Gợi ý tư duy:</strong> <span id="feedbackHint"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-end mt-2 md:mt-4 gap-3">
+                    <button id="btnNext" onclick="nextQuestion()" class="hidden w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 md:px-8 rounded-lg sm:rounded-xl shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300">
+                        Câu tiếp theo ➔
+                    </button>
+                    <button id="btnFinish" onclick="showResults()" class="hidden w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 md:px-8 rounded-lg sm:rounded-xl shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-300">
+                        Xem Kết Quả
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== RESULT VIEW ==================== -->
+        <div id="resultArea" class="hidden app-view bg-white rounded-xl md:rounded-2xl shadow-lg md:shadow-xl overflow-hidden p-6 sm:p-8 md:p-12 text-center mx-2 sm:mx-0">
+            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Báo cáo Kết quả</h2>
+            <p id="resultSubtitle" class="text-sm sm:text-base text-gray-600 mb-6">Đánh giá phản xạ lâm sàng</p>
+            
+            <div id="chartContainer" class="mb-6">
+                <svg viewBox="0 0 36 36" class="circular-chart score-good">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <path class="circle" id="resultCircle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    <text x="18" y="17" class="percentage" id="chartPercentage">0%</text>
+                    <text x="18" y="24" class="fraction" id="chartFraction">0 / X</text>
+                </svg>
+            </div>
+
+            <p id="resultMessage" class="text-base sm:text-lg font-medium text-gray-700 mb-8 px-2 sm:px-4 leading-relaxed"></p>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4 w-full px-2 sm:px-0">
+                <button onclick="goHome()" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3.5 sm:py-4 px-6 rounded-lg sm:rounded-xl transition-colors focus:outline-none">
+                    ⌂ Về Trang Chủ
+                </button>
+                <button id="btnRetrySame" onclick="restartQuiz(false)" class="w-full sm:w-auto bg-gray-800 hover:bg-gray-900 text-white font-bold py-3.5 sm:py-4 px-6 rounded-lg sm:rounded-xl shadow-md transition-colors focus:outline-none">
+                    ↺ Làm lại (Giữ thứ tự)
+                </button>
+                <button onclick="restartQuiz(true)" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 sm:py-4 px-6 rounded-lg sm:rounded-xl shadow-md transition-colors focus:outline-none flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    Trộn câu & Làm lại
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= DATABASE =================
+        const allChaptersData = {
+            1: {
+                title: "Chương 1: Giới thiệu khóa NLS",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Trong tiếp cận chuẩn của NLS, ấn tim và dùng thuốc được xem là những can thiệp trọng tâm và cần thực hiện song song với việc làm nở phổi ngay từ giây đầu tiên.",
+                        isTrue: false,
+                        rationale: "Khóa học nhấn mạnh tầm quan trọng của việc kiểm soát nhiệt độ, ưu tiên kiểm soát đường thở và làm nở phổi, trong khi ấn tim và thuốc chỉ có vai trò hạn chế [1].",
+                        hint: "Hãy nhớ về bản chất của hồi sức sơ sinh là giải quyết vấn đề hô hấp hay tim mạch trước?"
+                    },
+                    {
+                        question: "Phát biểu: Các kỹ năng và kiến thức trong khóa học NLS được thiết kế để áp dụng tối ưu cho việc hồi sức trẻ trong khung thời gian 10–20 phút đầu sau sinh.",
+                        isTrue: true,
+                        rationale: "Mục tiêu của khóa học là giúp nhân viên y tế thực hành kỹ năng và áp dụng vào hồi sức trẻ hiệu quả trong 10–20 phút đầu sau sinh [2].",
+                        hint: "Đây là giai đoạn chuyển tiếp quan trọng nhất từ tuần hoàn bào thai sang hô hấp tự nhiên."
+                    },
+                    {
+                        question: "Phát biểu: Việc đọc và nắm vững toàn bộ giáo trình NLS là điều kiện đủ để một bác sĩ đạt được năng lực thực hành lâm sàng trong hỗ trợ trẻ mới sinh thích nghi cuộc sống.",
+                        isTrue: false,
+                        rationale: "Giáo trình chỉ cung cấp kiến thức; để đạt được kỹ năng thực tế, người học bắt buộc phải tham gia khóa học thực hành trực tiếp và luyện tập trên mô hình [3].",
+                        hint: "Hồi sức là một kỹ năng cần sự phối hợp giữa 'não bộ' và 'bàn tay'."
+                    },
+                    {
+                        question: "Phát biểu: Khóa học NLS yêu cầu người học phải thực hành thành thạo ba kỹ năng kỹ thuật chính: kiểm soát đường thở (thông khí), ấn tim và đặt tĩnh mạch rốn.",
+                        isTrue: true,
+                        rationale: "Học viên cần được dạy và thực hành trên mô hình các kỹ năng: kiểm soát đường thở/thông khí, ấn tim và đặt tĩnh mạch rốn [4].",
+                        hint: "Đây là ba bước tương ứng với B-C-D trong lưu đồ hồi sức nâng cao."
+                    },
+                    {
+                        question: "Phát biểu: Trong các tình huống cấp cứu trẻ mới sinh, kỹ năng giao tiếp và làm việc nhóm được đánh giá có tầm quan trọng tương đương với các kỹ năng kỹ thuật cá nhân.",
+                        isTrue: true,
+                        rationale: "Khóa học đề cao tầm quan trọng của giao tiếp, yếu tố con người và làm việc nhóm trong xử trí tức thời các trường hợp cấp cứu [4].",
+                        hint: "80% sai sót y khoa trong hồi sức thường bắt nguồn từ đâu?"
+                    },
+                    {
+                        question: "Phát biểu: Theo hướng dẫn của Hội đồng Hồi sức Châu Âu (ERC), trong bối cảnh đại dịch, việc cứu sống trẻ sơ sinh luôn là ưu tiên tuyệt đối, đứng trên cả việc đảm bảo an toàn cho nhân viên y tế.",
+                        isTrue: false,
+                        rationale: "Việc đảm bảo an toàn cho người thực hiện cấp cứu luôn là ưu tiên hàng đầu trong các hướng dẫn của ERC [5].",
+                        hint: "Nguyên tắc an toàn cơ bản nhất của mọi quy trình cấp cứu là gì?"
+                    },
+                    {
+                        question: "Phát biểu: Khi thực hiện các thủ thuật tạo hạt khí dung (AGPs) như thông khí áp lực dương, nhân viên y tế bắt buộc phải sử dụng PPE cấp độ cao (như khẩu trang FFP3 hoặc N95).",
+                        isTrue: true,
+                        rationale: "Đối với các thủ thuật tạo hạt khí dung, người cấp cứu cần sử dụng PPE chuẩn (FFP3/N95) để bảo vệ khỏi lây nhiễm mầm bệnh [6].",
+                        hint: "AGPs làm tăng nguy cơ lây truyền mầm bệnh qua đường không khí."
+                    },
+                    {
+                        question: "Phát biểu: Hệ thống 'CoSy' của Hội đồng Hồi sức Châu Âu là nguồn cung cấp các tư liệu nghe nhìn quan trọng cần được đọc kết hợp với giáo trình để đạt kết quả học tập tốt nhất.",
+                        isTrue: true,
+                        rationale: "Người học nên đọc giáo trình kết hợp với các tư liệu học tập nghe nhìn có sẵn trên trang web 'CoSy' của ERC [7].",
+                        hint: "Đây là nền tảng quản lý đào tạo trực tuyến của ERC."
+                    }
+                ]
+            },
+            2: {
+                title: "Chương 2: Khác biệt trẻ mới sinh",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Khác với người lớn thường do biến cố tim mạch nguyên phát, tình trạng cần hồi sức ở trẻ em và trẻ sơ sinh hầu hết bắt nguồn từ bệnh lý hô hấp dẫn đến tổn thương chức năng cơ tim thứ phát [1, 2].",
+                        isTrue: true,
+                        rationale: "Ở trẻ em và trẻ sơ sinh, vấn đề chính là hỗ trợ hô hấp; khi phổi được thông khí, máu giàu oxy về tim sẽ giúp hệ tuần hoàn phục hồi [2, 3].",
+                        hint: "Hãy cân nhắc xem tim hay phổi thường là \"kẻ khởi đầu\" cho sự suy sụp ở trẻ mới sinh."
+                    },
+                    {
+                        question: "Phát biểu: Một trẻ đủ tháng sinh qua ngả âm đạo vẫn còn khoảng 100 mL dịch phổi cần được tái hấp thu hoặc tống xuất sau khi chào đời [4].",
+                        isTrue: true,
+                        rationale: "Mặc dù dịch phổi bắt đầu tái hấp thu khi chuyển dạ, trẻ sinh thường vẫn còn 100 mL dịch, và trẻ sinh mổ chủ động có thể còn nhiều hơn thế [4].",
+                        hint: "Chuyển dạ giúp ép dịch, nhưng vẫn còn một lượng đáng kể trong phế nang."
+                    },
+                    {
+                        question: "Phát biểu: Do các rối loạn nhịp tim nặng thường xảy ra trong quá trình ngạt sơ sinh, máy khử rung tim là thiết bị bắt buộc phải có sẵn trên bàn hồi sức [3].",
+                        isTrue: false,
+                        rationale: "Các rối loạn nhịp tim nặng hay gặp ở người lớn thường không xảy ra ở trẻ sơ sinh, do đó thiết bị khử rung tim là không cần thiết [3].",
+                        hint: "Rối loạn nhịp tim nguyên phát có phổ biến ở trẻ sơ sinh không?"
+                    },
+                    {
+                        question: "Phát biểu: Theo dữ liệu y văn, khoảng 10% trẻ sơ sinh đủ tháng sẽ bắt đầu nhịp thở đầu tiên chỉ sau các thao tác lau khô và kích thích xúc giác đơn thuần [5].",
+                        isTrue: true,
+                        rationale: "85% trẻ tự thở trong 10–30 giây, 10% đáp ứng sau khi được kích thích, và chỉ khoảng 3% cần thông khí áp lực dương (PPV) [5].",
+                        hint: "Đa số trẻ tự thở trong 10–30 giây, một nhóm nhỏ cần \"nhắc nhở\"."
+                    },
+                    {
+                        question: "Phát biểu: Thuật ngữ \"Hỗ trợ chuyển tiếp\" (Ổn định) nên được dùng thay thế cho \"Hồi sức\" khi mô tả các biện pháp giúp trẻ thích nghi với việc nhận oxy qua phổi thay vì nhau thai, đặc biệt là ở trẻ sinh non [6].",
+                        isTrue: true,
+                        rationale: "Hầu hết trẻ sinh non chỉ cần \"ổn định\" quá trình chuyển tiếp sinh lý hơn là \"hồi sức\" do tình trạng cận tử [6, 7].",
+                        hint: "Trẻ sinh non thường không bị thiếu oxy trước sinh nhưng vẫn cần hỗ trợ hô hấp."
+                    },
+                    {
+                        question: "Phát biểu: Ở trẻ sơ sinh, tình trạng hạ thân nhiệt chỉ làm tăng tỷ lệ bệnh tật nhưng không ảnh hưởng trực tiếp đến tỷ lệ tử vong lâm sàng [6, 8].",
+                        isTrue: false,
+                        rationale: "Hạ thân nhiệt làm tăng cả tỷ lệ tử vong và tỷ lệ bệnh tật đối với mọi tuổi thai [7, 8].",
+                        hint: "Trẻ sơ sinh có tỷ lệ diện tích bề mặt so với trọng lượng rất lớn."
+                    },
+                    {
+                        question: "Phát biểu: Nghiên cứu trên 95.000 ca sinh cho thấy tỷ lệ trẻ thực sự cần đặt nội khí quản tại phòng sinh chỉ chiếm khoảng 2/1.000 ca [9].",
+                        isTrue: true,
+                        rationale: "Trong số trẻ cần hỗ trợ, 8/1.000 trẻ đáp ứng với mặt nạ và chỉ 2/1.000 trẻ cần đặt nội khí quản [9].",
+                        hint: "Thông khí mặt nạ thành công trong đa số các trường hợp cần hỗ trợ hô hấp."
+                    },
+                    {
+                        question: "Phát biểu: Tỷ lệ trẻ sơ sinh cần hồi sức đầy đủ các bước (gồm PPV, ấn tim và dùng thuốc đường tĩnh mạch) là rất thấp, chiếm chưa đến 0,05% tổng số ca sinh [10].",
+                        isTrue: true,
+                        rationale: "Một tổng quan hồi cứu 10 năm trên 60.000 ca sinh cho thấy số trẻ cần hồi sức đủ các bước chỉ là 27 trẻ (ít hơn 0,05%) [10].",
+                        hint: "Đây là những trường hợp trẻ trong tình trạng \"cận tử\"."
+                    },
+                    {
+                        question: "Phát biểu: Việc phân loại ca sinh \"nguy cơ cao\" dựa trên cách sinh (ví dụ: sinh mổ chủ động) đã được chứng minh là giúp giảm đáng kể số cuộc gọi khẩn cấp ngoài dự đoán [11].",
+                        isTrue: false,
+                        rationale: "Cách quy định dựa vào cách sinh khiến hơn 30% ca sinh cần người hồi sức nhưng không giảm được số cuộc gọi khẩn cấp do trẻ không ổn ngoài dự đoán [11].",
+                        hint: "Các hướng dẫn hiện tại khuyến khích tiếp cận dựa trên dự đoán tình trạng trẻ hơn là chỉ dựa vào cách sinh."
+                    },
+                    {
+                        question: "Phát biểu: Kỹ năng quan trọng nhất mà nhân viên y tế cần thuần thục trong hồi sức sơ sinh là ấn tim hiệu quả và phối hợp dùng thuốc nhanh chóng [7].",
+                        isTrue: false,
+                        rationale: "Do trẻ cần hồi sức chủ yếu vì vấn đề hô hấp, kỹ năng quan trọng nhất là kiểm soát đường thở và thông khí tốt [7].",
+                        hint: "Hãy nhớ lại nguyên nhân chính gây suy sụp ở trẻ mới sinh."
+                    },
+                    {
+                        question: "Phát biểu: Trong hầu hết trường hợp trẻ cần hỗ trợ, hệ tuần hoàn vẫn hoạt động, nên chỉ cần làm phổi giãn nở là máu giàu oxy sẽ tự về tim [3, 4].",
+                        isTrue: true,
+                        rationale: "Khi phổi được thông khí, oxy sẽ đến tim và giúp tim tự phục hồi co bóp mà chưa cần đến ấn tim [3].",
+                        hint: "Sự phục hồi nhịp tim thường là hệ quả của việc thông khí thành công."
+                    },
+                    {
+                        question: "Phát biểu: Đối với mọi trẻ sinh non, việc kẹp rốn ngay lập tức là bắt buộc để có thể đưa trẻ đến bàn hồi sức sớm nhất có thể [6].",
+                        isTrue: false,
+                        rationale: "Trẻ ổn định (kể cả trẻ sinh non) đều có ích lợi từ việc kẹp rốn muộn để hỗ trợ chuyển tiếp tuần hoàn [6, 7].",
+                        hint: "Hãy xem xét lợi ích của việc kẹp rốn muộn trong quá trình ổn định trẻ."
+                    }
+                ]
+            },
+            3: {
+                title: "Chương 3: Chăm sóc tổng quát",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Trình tự đánh giá trẻ sơ sinh để quyết định can thiệp nên được thực hiện theo thứ tự: Nhịp tim → Thở → Trương lực cơ → Màu sắc da.",
+                        isTrue: false,
+                        rationale: "Thứ tự đúng là: Màu sắc → Trương lực → Thở → Nhịp tim (Từ dễ đánh giá đến khó) [1, 2].",
+                        hint: "Tài liệu khuyến cáo đi từ thông số dễ quan sát nhất đến thông số cần công cụ hỗ trợ."
+                    },
+                    {
+                        question: "Phát biểu: Một trẻ đủ tháng khỏe mạnh (nặng ~3,5 kg) có khả năng tự tống xuất khoảng 100 mL dịch ra khỏi phổi và phế quản trong vài phút đầu mà không cần hỗ trợ hút nhớt.",
+                        isTrue: true,
+                        rationale: "Trẻ có thể tự tống dịch; không cần mất thời gian hút lượng nhỏ dịch ở miệng/mũi, tránh các động tác hút thô bạo gây sang chấn [3].",
+                        hint: "Đây là cơ chế sinh lý tống xuất dịch tự nhiên của trẻ đủ tháng."
+                    },
+                    {
+                        question: "Phát biểu: Khi không có ống nghe, bắt mạch rốn là phương pháp chẩn đoán nhịp tim chậm (Bradycardia) hoàn toàn tin cậy để quyết định ấn tim.",
+                        isTrue: false,
+                        rationale: "Mạch rốn không đáng tin cậy, thường chậm hơn nhịp tim thật sự. Nếu mạch rốn chậm hoặc không bắt được thì không kết luận được gì [4-6].",
+                        hint: "Mạch rốn có luôn phản ánh đúng tần số tim thật sự trong trạng thái suy sụp không?"
+                    },
+                    {
+                        question: "Phát biểu: Việc đặt trẻ nằm lên một tấm đệm lạnh hoặc khăn chưa được làm ấm là nguyên nhân gây mất nhiệt qua cơ chế đối lưu.",
+                        isTrue: false,
+                        rationale: "Đặt trẻ trên bề mặt lạnh gây mất nhiệt do dẫn truyền (conduction). Đối lưu (convection) là do luồng khí thổi ngang qua trẻ [7].",
+                        hint: "Đối lưu liên quan đến luồng khí, còn tiếp xúc bề mặt là cơ chế gì?"
+                    },
+                    {
+                        question: "Phát biểu: Ở nhóm trẻ có cân nặng thấp nhất, cứ mỗi khi nhiệt độ cơ thể giảm 1°C dưới mức 36,5°C, nguy cơ tử vong cơ bản sẽ tăng thêm 28%.",
+                        isTrue: true,
+                        rationale: "Hạ thân nhiệt liên quan trực tiếp đến tăng tỷ lệ tử vong và bệnh tật, đặc biệt là trẻ nhẹ cân [8, 9].",
+                        hint: "Một con số thống kê sống còn quan trọng đối với trẻ non tháng/nhẹ cân."
+                    },
+                    {
+                        question: "Phát biểu: Trẻ 2 phút tuổi có tình trạng tím môi và thân mình đơn thuần, nhưng thở đều và nhịp tim >100 lần/phút, cần được khởi động cung cấp oxy ngay lập tức.",
+                        isTrue: false,
+                        rationale: "Hầu hết trẻ đều tím khi mới sinh và vài phút sau đó. Nếu chỉ tím đơn thuần (thở và tim ổn) thì không cần hỗ trợ [1, 8, 10].",
+                        hint: "Hầu hết trẻ sơ sinh có biểu hiện gì về màu sắc trong vài phút đầu đời?"
+                    },
+                    {
+                        question: "Phát biểu: Đường huyết 1,5 mmol/L ở trẻ đủ tháng khỏe mạnh trong 1 giờ đầu sau sinh là một tình trạng cấp cứu bắt buộc phải truyền Glucose tĩnh mạch ngay để tránh tổn thương não.",
+                        isTrue: false,
+                        rationale: "Trẻ sơ sinh có nguồn năng lượng thay thế cho não là lactate và ketones nên không bị mất ý thức như người lớn ở mức đường huyết này [1, 11-13].",
+                        hint: "Trẻ sơ sinh có nguồn năng lượng \"dự phòng\" nào khác Glucose không?"
+                    },
+                    {
+                        question: "Phát biểu: Tắm trẻ ngay sau sinh là bước chăm sóc thường quy được khuyến khích để kích thích phản xạ thở và làm sạch phân su.",
+                        isTrue: false,
+                        rationale: "Không cần tắm trẻ ngay vì sẽ làm trẻ lạnh không cần thiết và tiêu tốn năng lượng dự trữ để duy trì nhiệt độ [4, 14].",
+                        hint: "Nước bay hơi trên da gây ra hậu quả gì cho năng lượng dự trữ?"
+                    },
+                    {
+                        question: "Phát biểu: Đối với trẻ khỏe mạnh, kẹp rốn muộn ít nhất 60 giây có thể giúp trẻ nhận thêm một thể tích máu tương đương 110 mL so với kẹp rốn ngay.",
+                        isTrue: true,
+                        rationale: "Trì hoãn kẹp rốn giúp tăng thể tích máu (trung bình 110 mL) và ổn định huyết động [1, 15].",
+                        hint: "Một con số cụ thể về lượng máu truyền từ bánh nhau."
+                    },
+                    {
+                        question: "Phát biểu: Tư thế da kề da trên ngực mẹ là biện pháp giữ ấm hoàn hảo và không tiềm ẩn nguy cơ gây tắc nghẽn đường thở cơ học.",
+                        isTrue: false,
+                        rationale: "Tư thế này có nguy cơ gây tắc nghẽn đường thở, dẫn đến suy sụp đột ngột (SUPC), nên cần giám sát liên tục [1, 8, 14, 16].",
+                        hint: "Tại sao NLS nhắc đến khái niệm SUPC trong tư thế này?"
+                    },
+                    {
+                        question: "Phát biểu: Y văn ghi nhận có khoảng 20% trẻ khỏe mạnh phải mất từ 60 đến 180 giây mới bắt đầu thở bình thường mà không cần bất kỳ can thiệp kích thích hay làm nở phổi nào.",
+                        isTrue: true,
+                        rationale: "Đây là dữ liệu về biến thiên sinh lý ở trẻ khỏe mạnh [17].",
+                        hint: "Đừng quá vội vàng can thiệp nếu các dấu hiệu sinh tồn khác vẫn trong giới hạn cho phép."
+                    },
+                    {
+                        question: "Phát biểu: Các biện pháp kích thích thở (lau khô, chà xát lưng) có bằng chứng đem lại lợi ích cho trẻ sinh non nhiều hơn so với trẻ đủ tháng.",
+                        isTrue: true,
+                        rationale: "Kích thích thở có vẻ có lợi cho trẻ sinh non hơn cho trẻ đủ tháng [18, 19].",
+                        hint: "Trẻ sinh non thường cần một \"cú hích\" cơ học mạnh hơn để khởi phát trung tâm hô hấp."
+                    },
+                    {
+                        question: "Phát biểu: Khám ngay sau sinh chủ yếu nhằm đánh giá các dấu hiệu suy hô hấp tuần hoàn, bất thường bẩm sinh nặng và sang chấn khi sinh, việc khám chi tiết sẽ thực hiện sau.",
+                        isTrue: true,
+                        rationale: "Khám ngay sau sinh tập trung vào các vấn đề sống còn và nhận dạng bẩm sinh [16, 20].",
+                        hint: "Ưu tiên hàng đầu là nhận diện nhu cầu hồi sức hay tầm soát dị tật nhỏ?"
+                    },
+                    {
+                        question: "Phát biểu: Trẻ bị stress lạnh sẽ tiêu thụ năng lượng dự trữ (Glycogen) nhanh hơn để duy trì thân nhiệt, dẫn đến nguy cơ hạ đường huyết lâm sàng sớm hơn.",
+                        isTrue: true,
+                        rationale: "Trẻ lạnh phải dùng nhiều năng lượng hơn, làm cạn kiệt dự trữ nhanh hơn [14].",
+                        hint: "Mối liên quan giữa nhiệt độ và chuyển hóa."
+                    },
+                    {
+                        question: "Phát biểu: Điểm Apgar là tiêu chí quan trọng nhất để chỉ định và bắt đầu quy trình hồi sức tại phòng sinh.",
+                        isTrue: false,
+                        rationale: "Điểm Apgar không phải là tiêu chí chỉ định hay đánh giá của hồi sức, nó chỉ cung cấp cái nhìn tổng quan về tình trạng trẻ [21].",
+                        hint: "Hãy xem lời nói đầu về giá trị thực của Apgar."
+                    }
+                ]
+            },
+            4: {
+                title: "Chương 4: Sinh lý chuyển tiếp",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Để thiết lập dung tích cặn chức năng (FRC) và đẩy dịch phổi vào mô kẽ, trẻ khỏe mạnh cần tạo ra áp lực âm trong lồng ngực từ -20 đến -80 cmH2O.",
+                        isTrue: true,
+                        rationale: "Trẻ khỏe mạnh có thể tạo áp lực âm mạnh từ -20 đến -80 cmH2O để thông khí phổi và tống xuất khoảng 100 mL dịch phế nang vào mô kẽ. [1, 2]",
+                        hint: "Hãy chú ý đây là áp lực âm tự thân hay áp lực dương hỗ trợ?"
+                    },
+                    {
+                        question: "Phát biểu: Việc kẹp dây rốn ngay lập tức làm tăng 30% huyết áp hệ thống nhưng đồng thời làm giảm tạm thời từ 30% đến 50% cung lượng tim.",
+                        isTrue: true,
+                        rationale: "Ngừng tuần hoàn qua nhau thai làm tăng kháng lực hệ thống (tăng HA 30%) nhưng đồng thời làm giảm 30-50% cung lượng tim do mất lượng máu tĩnh mạch rốn trở về tim. [3]",
+                        hint: "Cung lượng tim giảm là do mất nguồn máu tĩnh mạch rốn hay do tăng hậu tải đột ngột?"
+                    },
+                    {
+                        question: "Phát biểu: Quá trình tống xuất dịch phổi khởi đầu từ khi chuyển dạ và phải được hoàn tất hoàn toàn trong vòng 60 phút đầu sau sinh để đảm bảo trao đổi khí.",
+                        isTrue: false,
+                        rationale: "Tống xuất dịch phổi hoàn toàn thường xảy ra trong vòng 4 giờ sau sinh, không phải 60 phút. [1, 4]",
+                        hint: "Nhịp thở đầu làm nở phổi nhanh, nhưng dịch mô kẽ cần bao lâu để biến mất hẳn?"
+                    },
+                    {
+                        question: "Phát biểu: Trẻ sơ sinh thường sử dụng cơ chế \"hãm thở\" (phát ra tiếng rên hoặc đóng thanh môn sớm) ở thì thở ra để giữ lại không khí và thiết lập FRC.",
+                        isTrue: true,
+                        rationale: "Sự \"hãm thở\" tạo điều kiện cho sự phân bổ khí trong phổi và hỗ trợ tạo nên dung tích cặn chức năng (FRC). [6]",
+                        hint: "Đây là một cơ chế sinh lý bảo vệ hay là một dấu hiệu bệnh lý luôn cần can thiệp?"
+                    },
+                    {
+                        question: "Phát biểu: Ở một trẻ thở tự nhiên, Carbon Dioxide có thể được phát hiện ngay lập tức từ nhịp thở đầu tiên qua các thiết bị đo dòng khí.",
+                        isTrue: false,
+                        rationale: "Những nhịp thở đầu thường chỉ đẩy dịch, trung bình mất 7 nhịp thở mới phát hiện được CO2 trong hơi thở ra. [4]",
+                        hint: "Những nhịp thở đầu tiên có thực hiện trao đổi khí ngay tại phế nang không?"
+                    },
+                    {
+                        question: "Phát biểu: Khi thai nhi bắt đầu rơi vào giai đoạn thiếu oxy máu cấp, phản ứng sinh lý đầu tiên luôn là nhịp tim chậm (Bradycardia) do suy cơ tim.",
+                        isTrue: false,
+                        rationale: "Khởi đầu thiếu oxy, nhịp thở sâu và nhanh hơn, nhịp tim có thể tăng nhẹ trước khi giảm nhanh xuống còn một nửa do phản ứng vagal (thần kinh phế vị). [7, 8]",
+                        hint: "Hãy nhớ về phản xạ của hệ thần kinh tự chủ giai đoạn sớm."
+                    },
+                    {
+                        question: "Phát biểu: Trong giai đoạn ngưng thở lần đầu, nhịp tim giảm nhưng huyết áp của trẻ vẫn được duy trì gần như mức bình thường.",
+                        isTrue: true,
+                        rationale: "Huyết áp được duy trì dù nhịp tim chậm nhờ các mạch máu co thắt, ưu tiên dồn máu cho tim và não. [7, 9]",
+                        hint: "Cơ thể trẻ có cơ chế co mạch ngoại vi để bảo vệ các cơ quan sinh tồn không?"
+                    },
+                    {
+                        question: "Phát biểu: Tim của trẻ sơ sinh đủ tháng có khả năng chịu đựng thiếu oxy kéo dài tốt hơn người lớn nhờ vào dự trữ Glycogen dồi dào tại tim và gan.",
+                        isTrue: true,
+                        rationale: "Trẻ sơ sinh sử dụng dự trữ Glycogen để duy trì tuần hoàn thông qua chuyển hóa yếm khí khi thiếu oxy kéo dài. [7, 10, 12]",
+                        hint: "Năng lượng cho chuyển hóa yếm khí ở trẻ sơ sinh lấy từ đâu?"
+                    },
+                    {
+                        question: "Phát biểu: Nhịp thở nấc (Gasping) là một phản xạ tự động của trung tâm hô hấp tại hành tủy, xảy ra sau giai đoạn ngưng thở lần đầu với tần số khoảng 12 lần/phút.",
+                        isTrue: true,
+                        rationale: "Sau ngưng thở lần đầu, hành tủy tự động tạo ra nhịp thở nấc để cố gắng lấy oxy; nếu không hiệu quả sẽ dẫn đến ngưng thở lần cuối. [12, 15]",
+                        hint: "Đây là nỗ lực cuối cùng của hệ thần kinh trung ương hay là nhịp thở bình thường?"
+                    },
+                    {
+                        question: "Phát biểu: Một trẻ đang trong giai đoạn ngưng thở cuối vẫn có thể tự phục hồi nhịp thở nếu được kích thích xúc giác mạnh và làm thông đường thở trên.",
+                        isTrue: false,
+                        rationale: "Ngưng thở cuối chỉ có thể hồi phục khi có Thông khí áp lực dương (PPV) để đưa oxy tới tim và não; kích thích xúc giác không còn tác dụng. [16-18]",
+                        hint: "Ngưng thở cuối nghĩa là cơ chế thần kinh tại tủy sống còn hoạt động không?"
+                    },
+                    {
+                        question: "Phát biểu: Khi nhịp tim chậm lại trong giai đoạn thiếu oxy, thể tích nhát bóp của tim trẻ sơ sinh thực tế có xu hướng tăng nhẹ.",
+                        isTrue: true,
+                        rationale: "Nhịp tim chậm giúp hai tâm thất có nhiều thời gian hơn để đổ đầy trong thời kỳ tâm trương, làm tăng nhẹ thể tích nhát bóp. [11, 19]",
+                        hint: "Thời gian đổ đầy tâm trương thay đổi thế nào khi nhịp tim chậm?"
+                    },
+                    {
+                        question: "Phát biểu: Giáo trình NLS 2021 khuyến khích sử dụng thuật ngữ \"Ngạt sơ sinh\" làm chẩn đoán lâm sàng chính thức vì nó bao quát toàn bộ bệnh cảnh thiếu oxy và toan máu.",
+                        isTrue: false,
+                        rationale: "Nên tránh dùng từ \"ngạt\" vì thiếu đặc hiệu; nên thay bằng: thiếu oxy mô, thiếu oxy máu, hoặc tăng carbonic máu. [20, 21]",
+                        hint: "Thuật ngữ này có đủ đặc hiệu để hướng dẫn điều trị không?"
+                    },
+                    {
+                        question: "Phát biểu: Dấu hiệu phục hồi đầu tiên và quan trọng nhất khi thông khí phổi hiệu quả là sự khởi phát của nhịp thở đều.",
+                        isTrue: false,
+                        rationale: "Nhịp tim tăng mới là dấu hiệu đầu tiên phản ánh thông khí thành công và máu giàu oxy đã về đến tim. [22-24]",
+                        hint: "Cơ quan nào sẽ đáp ứng với oxy sớm nhất sau khi phổi nở?"
+                    },
+                    {
+                        question: "Phát biểu: Nếu kẹp rốn sau khi trẻ đã bắt đầu nhịp thở đầu tiên, hiện tượng chậm nhịp tim sinh lý sau sinh thường sẽ không xảy ra.",
+                        isTrue: true,
+                        rationale: "Nếu trẻ đã thở và phổi nở, lượng máu từ tĩnh mạch phổi về tim tăng lên sẽ bù đắp thiếu hụt máu từ tĩnh mạch rốn khi kẹp rốn, tránh được chậm nhịp tim. [25, 26]",
+                        hint: "Nhịp thở đầu tiên giúp tăng lưu lượng máu từ phổi về tim trái như thế nào?"
+                    },
+                    {
+                        question: "Phát biểu: Toan chuyển hóa (Acidosis) và toan hóa máu (Acidaemia) là hai thuật ngữ hoàn toàn đồng nghĩa và có thể dùng thay thế nhau trong mọi báo cáo khí máu.",
+                        isTrue: false,
+                        rationale: "Toan hóa máu (Acidaemia) là tăng H+ trong máu; Toan chuyển hóa (Acidosis) là quá trình tăng H+ trong bất kỳ mô nào. [27]",
+                        hint: "Một cái chỉ tình trạng trong máu, một cái chỉ quá trình tích tụ trong mô."
+                    },
+                    {
+                        question: "Phát biểu: Khi thiếu oxy, trẻ sơ sinh co mạch toàn thân để đảm bảo huyết áp, ngoại trừ mạch máu phổi vì phổi cần giãn nở để nhận khí.",
+                        isTrue: false,
+                        rationale: "Trong thiếu oxy (và cả thời kỳ thai nhi), kháng lực động mạch phổi rất cao để hạn chế máu lên phổi chưa hoạt động. [28, 29]",
+                        hint: "Kháng lực mạch máu phổi trong thời kỳ bào thai và khi thiếu oxy là cao hay thấp?"
+                    },
+                    {
+                        question: "Phát biểu: Tình trạng ngạt nặng thường dẫn đến toan hỗn hợp, là sự kết hợp giữa toan hô hấp (do tích tụ CO2) và toan chuyển hóa (do tích tụ acid lactic).",
+                        isTrue: true,
+                        rationale: "Ngừng trao đổi khí gây tích tụ CO2 (toan hô hấp) và buộc cơ thể chuyển hóa yếm khí tạo lactate (toan chuyển hóa). [27]",
+                        hint: "Ngừng trao đổi khí gây ra cả hai loại toan này đúng không?"
+                    },
+                    {
+                        question: "Phát biểu: Trình tự suy sụp do thiếu oxy chuẩn xác là: Thiếu oxy → Ngưng thở lần đầu → Thở nấc → Ngưng thở cuối → Tử vong.",
+                        isTrue: true,
+                        rationale: "Đây là chuỗi logic sinh lý bệnh của quá trình suy sụp thần kinh hô hấp khi thiếu oxy kéo dài không được can thiệp. [14, 22]",
+                        hint: "Có giai đoạn nào trẻ cố gắng thở lại trước khi hoàn toàn suy sụp không?"
+                    }
+                ]
+            },
+            5: {
+                title: "Chương 5: Tiến trình lúc sinh",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Khi vừa đón trẻ trên tay, trình tự đánh giá ưu tiên để định hướng can thiệp lâm sàng là: Màu sắc da → Trương lực cơ → Thở → Nhịp tim [1, 2].",
+                        isTrue: true,
+                        rationale: "Đánh giá màu sắc và trương lực là bước đầu tiên, sau đó quan sát nhịp thở và nghe nhịp tim để quyết định các bước tiếp theo [1, 2].",
+                        hint: "Đây là trình tự từ quan sát tổng thể đến thông số cần công cụ hỗ trợ."
+                    },
+                    {
+                        question: "Phát biểu: Mục tiêu lý tưởng trong thực hành lâm sàng là hoàn tất việc đánh giá và thông đường thở để bắt đầu các nhịp nở phổi đầu tiên trong vòng 60 giây sau sinh [3, 4].",
+                        isTrue: true,
+                        rationale: "Bạn nên đặt mục tiêu bắt đầu các nhịp nở phổi trong vòng 60 giây đầu đời để tối ưu hóa khả năng tự hồi phục của trẻ [3, 4].",
+                        hint: "Con số này tương ứng với khái niệm \"Phút Vàng\" trong hồi sức."
+                    },
+                    {
+                        question: "Phát biểu: Đối với trẻ đủ tháng ngưng thở, cần thực hiện 5 nhịp nở phổi đầu tiên với áp lực 30 cmH2O và duy trì thời gian hít vào từ 2–3 giây cho mỗi nhịp [5, 6].",
+                        isTrue: true,
+                        rationale: "Thời gian 2–3 giây giúp đẩy dịch phế nang hiệu quả, áp lực 30 cmH2O là mức khởi đầu chuẩn cho trẻ đủ tháng [5, 6].",
+                        hint: "Hãy chú ý đến áp lực và thời gian cần thiết để đẩy dịch phổi vào mô kẽ."
+                    },
+                    {
+                        question: "Phát biểu: Mọi trẻ sơ sinh sinh non dưới 32 tuần tuổi thai đều bắt đầu hồi sức với nồng độ oxy hít vào (FiO2) tối thiểu là 40% để đảm bảo bão hòa oxy máu [7, 8].",
+                        isTrue: false,
+                        rationale: "Trẻ 28–32 tuần bắt đầu với 21–30% oxy; trẻ < 28 tuần bắt đầu với 30% oxy [7, 8].",
+                        hint: "NLS 2021 khuyến cáo mức FiO2 khởi đầu rất thận trọng để tránh độc tính oxy."
+                    },
+                    {
+                        question: "Phát biểu: Khi thực hiện nở phổi thành công, dấu hiệu phục hồi đầu tiên và đáng tin cậy nhất là trẻ bắt đầu có cử động tay chân hoặc khóc lớn [8, 9].",
+                        isTrue: false,
+                        rationale: "Tăng nhịp tim (thường thấy trong 5–10 giây sau khi phổi nở) mới là dấu hiệu đáp ứng đầu tiên và quan trọng nhất [8, 9].",
+                        hint: "Cơ quan nào nhạy cảm nhất với oxy và phản ánh trực tiếp hiệu quả thông khí?"
+                    },
+                    {
+                        question: "Phát biểu: Nếu nhịp tim không tăng sau 5 nhịp nở phổi đầu tiên, bước kế tiếp bắt buộc là phải tăng nồng độ oxy lên 100% trước khi thực hiện lại bất kỳ thao tác nào khác [10, 11].",
+                        isTrue: false,
+                        rationale: "Phải quay lại kiểm tra đường thở (vị trí đầu, mặt nạ, ấn hàm) và lặp lại 5 nhịp nở phổi trước khi thay đổi nồng độ oxy [10, 11].",
+                        hint: "Vấn đề thường nằm ở kỹ thuật (Airway) hay ở nồng độ Oxy?"
+                    },
+                    {
+                        question: "Phát biểu: Bắt đầu ấn tim ngay lập tức khi nghe nhịp tim dưới 60 lần/phút, bất kể lồng ngực có di động hay chưa [12, 13].",
+                        isTrue: false,
+                        rationale: "Chỉ ấn tim khi đã đảm bảo thông khí hiệu quả (lồng ngực di động) trong ít nhất 30 giây mà nhịp tim vẫn < 60 lần/phút [12, 13].",
+                        hint: "Ấn tim khi phổi chưa được oxy hóa có mang lại lợi ích gì không?"
+                    },
+                    {
+                        question: "Phát biểu: Khi bắt đầu tiến hành ấn tim, bắt buộc phải tăng nồng độ oxy hít vào (FiO2) lên mức 100% [7, 14].",
+                        isTrue: true,
+                        rationale: "Tăng oxy lên 100% khi nhịp tim không tăng dù thông khí hiệu quả hoặc khi cần ấn tim để đảm bảo máu về vành có oxy hóa tốt nhất [7, 14].",
+                        hint: "Đây là lúc tim cần oxy tối đa để phục hồi co bóp."
+                    },
+                    {
+                        question: "Phát biểu: Sau khi phổi đã được nở hoàn toàn bằng 5 nhịp ban đầu, các nhịp giúp thở tiếp theo nên thực hiện với tần số 30 lần/phút [12, 15].",
+                        isTrue: true,
+                        rationale: "Sau khi phổi nở, chỉ cần duy trì nhịp bóp ngắn với tần số khoảng 30 lần/phút để duy trì trao đổi khí [12, 15].",
+                        hint: "Tần số này khác với nhịp thở sinh lý của trẻ."
+                    },
+                    {
+                        question: "Phát biểu: Mục tiêu bão hòa oxy (SpO2) chấp nhận được đo ở tay phải tại thời điểm 5 phút sau sinh là 85% [12, 16].",
+                        isTrue: true,
+                        rationale: "Mục tiêu SpO2 là: 2 phút (65%), 5 phút (85%) và 10 phút (90%) [12, 16].",
+                        hint: "Đây là chỉ số bách phân vị thứ 25 của trẻ khỏe mạnh."
+                    },
+                    {
+                        question: "Phát biểu: Quan sát màu sắc da là một biện pháp đáng tin cậy để đánh giá tình trạng oxy hóa máu và hiệu quả của các bước hồi sức sơ sinh [2, 17].",
+                        isTrue: false,
+                        rationale: "Đánh giá màu sắc bằng mắt thường không đáng tin cậy; thay vào đó nên sử dụng SpO2 hoặc nhịp tim để đánh giá đáp ứng [2, 17].",
+                        hint: "Hầu hết trẻ sơ sinh trông như thế nào trong vài phút đầu đời?"
+                    },
+                    {
+                        question: "Phát biểu: Trong hồi sức sơ sinh kéo dài, đường bơm qua ống nội khí quản (ETT) được ưu tiên hơn đường tĩnh mạch rốn (UVC) vì thao tác nhanh chóng hơn [18, 19].",
+                        isTrue: false,
+                        rationale: "Đường tĩnh mạch rốn (UVC) là đường dùng ưu tiên; đường ETT chỉ dùng khi chưa có đường truyền khác và hiệu quả kém hơn [18-20].",
+                        hint: "Đường dùng nào cho nồng độ thuốc trong máu ổn định và hiệu quả cao hơn?"
+                    },
+                    {
+                        question: "Phát biểu: Liều adrenaline chuẩn qua đường tĩnh mạch rốn là 20 microgram/kg (tương đương 0,2 mL/kg dung dịch nồng độ 1:10.000) [18, 21].",
+                        isTrue: true,
+                        rationale: "Liều 20 microgram/kg tĩnh mạch là liều khuyến cáo để kích thích cơ tim [18, 21].",
+                        hint: "Đây là liều lượng giúp tăng áp lực tưới máu vành."
+                    },
+                    {
+                        question: "Phát biểu: Đối với mọi trẻ sinh ra có nước ối nhuộm phân su đậm đặc và trẻ mềm nhũn, bước đầu tiên là phải đặt nội khí quản để hút sạch khí quản trước khi làm nở phổi [22, 23].",
+                        isTrue: false,
+                        rationale: "Không hút thường quy; phải tập trung làm nở phổi trong vòng 1 phút đầu. Chỉ hút dưới quan sát trực tiếp nếu thông khí mặt nạ không làm ngực di động [22, 23].",
+                        hint: "NLS 2021 nhấn mạnh việc ưu tiên thông khí hay hút dịch?"
+                    },
+                    {
+                        question: "Phát biểu: Cấu trúc SBAR (Situation - Background - Assessment - Recommendation) được khuyến cáo sử dụng để đảm bảo thông tin trao đổi trong kíp hồi sức được rõ ràng và tiết kiệm thời gian [24, 25].",
+                        isTrue: true,
+                        rationale: "SBAR là công cụ chuẩn hóa giúp bàn giao và báo cáo tình huống cấp cứu hiệu quả [24, 25].",
+                        hint: "80% sự cố nghiêm trọng bắt nguồn từ giao tiếp thất bại."
+                    },
+                    {
+                        question: "Phát biểu: Nếu một trẻ đủ tháng hoàn toàn không có nhịp tim sau 20 phút hồi sức tích cực và đã loại trừ các nguyên nhân có thể điều trị được, kíp trực nên cân nhắc ngưng hồi sức [26, 27].",
+                        isTrue: true,
+                        rationale: "Sau 20 phút không có nhịp tim dù đã hồi sức đúng kỹ thuật, tiên lượng trẻ cực kỳ xấu nên việc ngưng hồi sức là phù hợp [26, 27].",
+                        hint: "Đây là ngưỡng thời gian dựa trên tiên lượng về tử vong và khuyết tật não."
+                    },
+                    {
+                        question: "Phát biểu: Naloxone được xem là thuốc cấp cứu thiết yếu và cần được sử dụng ngay trong giai đoạn ấn tim nếu nghi ngờ mẹ dùng thuốc phiện [28, 29].",
+                        isTrue: false,
+                        rationale: "Naloxone không phải thuốc cấp cứu; chỉ dùng khi trẻ đã ổn định tim mạch và đường thở nhưng vẫn ngưng thở do tác dụng của opiates từ mẹ [28, 29].",
+                        hint: "Thuốc này chỉ có tác dụng khi trẻ đã ổn định về cái gì?"
+                    },
+                    {
+                        question: "Phát biểu: Vị trí ấn tim chuẩn ở trẻ sơ sinh là tại một phần ba dưới của xương ức, ngay dưới đường nối giữa hai núm vú [30, 31].",
+                        isTrue: true,
+                        rationale: "Đặt ngón tay ngay dưới đường liên núm vú để ép trực tiếp lên tâm thất mà không làm tổn thương các tạng trong ổ bụng [30, 31].",
+                        hint: "Tránh ấn quá thấp vì có thể gây tổn thương gan."
+                    }
+                ]
+            },
+            6: {
+                title: "Chương 6: Xử trí dây rốn",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Mọi ca sinh, bất kể mức độ nguy cơ, đều bắt buộc phải có ít nhất một nhân viên y tế có đủ năng lực thực hiện các bước hỗ trợ sự sống ban đầu và người này chỉ tập trung chăm sóc trẻ sơ sinh [1].",
+                        isTrue: true,
+                        rationale: "Mỗi ca sinh phải có ít nhất một người có đủ năng lực thực hiện hỗ trợ sự sống ban đầu và người này không nên kiêm nhiệm chăm sóc mẹ [1].",
+                        hint: "Đây là nguyên tắc phân công để đảm bảo không bỏ sót trẻ trong \"Phút Vàng\"."
+                    },
+                    {
+                        question: "Phát biểu: Theo bảng kiểm lâm sàng, \"Mẹ xuất huyết nặng\" và \"Nước ối có phân su\" được phân loại vào nhóm các yếu tố nguy cơ xuất hiện trước khi chuyển dạ [2].",
+                        isTrue: false,
+                        rationale: "Đây là các yếu tố nguy cơ xuất hiện trong khi chuyển dạ, đòi hỏi sự chuẩn bị kíp hồi sức ngay lập tức [2].",
+                        hint: "Hãy phân biệt giữa tình trạng bệnh lý mãn tính của mẹ và các biến cố xảy ra trong quá trình đẻ."
+                    },
+                    {
+                        question: "Phát biểu: Ở trẻ đủ tháng khỏe mạnh, việc trì hoãn kẹp rốn ít nhất 5 phút sau sinh có thể giúp trẻ nhận thêm trung bình 110 mL máu (tương đương 116g cân nặng) so với kẹp rốn ngay [3].",
+                        isTrue: true,
+                        rationale: "Trẻ đủ tháng không bị kẹp rốn trong 5 phút đầu sẽ tăng thêm được trung bình 110 mL máu, giúp cải thiện dự trữ sắt nhũ nhi [3, 4].",
+                        hint: "Một con số cụ thể về thể tích máu truyền từ bánh nhau trong 5 phút đầu."
+                    },
+                    {
+                        question: "Phát biểu: Kẹp dây rốn ngay lập tức (ICC) trước nhịp thở đầu tiên gây ra sự sụt giảm tức thì 30% huyết áp động mạch hệ thống do mất nguồn máu từ bánh nhau [5].",
+                        isTrue: false,
+                        rationale: "Kẹp rốn sớm làm tăng 30% huyết áp hệ thống (do tăng kháng lực) nhưng lại làm giảm 30–50% cung lượng tim (do mất lượng máu tĩnh mạch rốn trở về tim) [5].",
+                        hint: "Hãy nhớ lại sự thay đổi kháng lực hệ thống khi vòng tuần hoàn nhau thai bị ngắt bỏ."
+                    },
+                    {
+                        question: "Phát biểu: Vắt dây rốn (3–5 lần về phía trẻ) là biện pháp thay thế an toàn và hiệu quả cho kẹp rốn muộn đối với mọi trẻ sinh non từ 22 tuần tuổi thai trở lên cần hồi sức gấp [6, 7].",
+                        isTrue: false,
+                        rationale: "Không được thực hiện vắt dây rốn ở trẻ sinh non dưới 28 tuần vì nguy cơ cao gây dao động huyết áp dẫn đến xuất huyết não thất (IVH) nghiêm trọng [6, 7].",
+                        hint: "Có một ngưỡng tuổi thai mà tại đó cấu trúc mạch máu não cực kỳ nhạy cảm với sự dao động huyết áp."
+                    },
+                    {
+                        question: "Phát biểu: Trong trường hợp mẹ bị nhau bong non, mạch máu tiền đạo hoặc đứt dây rốn, nhân viên y tế vẫn nên cố gắng thực hiện DCC ít nhất 60 giây để đảm bảo trẻ nhận đủ oxy [8].",
+                        isTrue: false,
+                        rationale: "Trong các tình huống gián đoạn dòng máu/oxy hóa từ bánh nhau, dây rốn phải được kẹp ngay lập tức để ưu tiên hồi sức trên bàn [8].",
+                        hint: "Khi nguồn cấp oxy từ bánh nhau bị gián đoạn thực thể, việc chờ đợi có lợi hay có hại?"
+                    },
+                    {
+                        question: "Phát biểu: Kỹ thuật vắt dây rốn khi rốn còn nguyên (ngay sau sinh) có thể giúp một trẻ đủ tháng nhận nhanh được khoảng 50 mL máu chỉ trong vòng vài giây [9].",
+                        isTrue: true,
+                        rationale: "3–5 lần vuốt dây rốn về phía trẻ có thể giúp trẻ nhận được khoảng 50 mL máu, nhanh hơn nhiều so với việc chờ đợi rốn ngừng đập tự nhiên [9].",
+                        hint: "Đây là giải pháp tăng thể tích tuần hoàn nhanh hơn so với hồi máu thụ động từ cơn co tử cung."
+                    },
+                    {
+                        question: "Phát biểu: Dữ liệu lâm sàng cho thấy trẻ được kẹp rốn muộn ít nhất 2 phút có nguy cơ bị chậm nhịp tim ngay sau sinh thấp hơn rõ rệt so với trẻ kẹp rốn ngay [10].",
+                        isTrue: true,
+                        rationale: "DCC giúp duy trì lượng máu tĩnh mạch trở về tim cho đến khi phổi nở và tăng lưu lượng máu từ tĩnh mạch phổi, giúp nhịp tim ổn định và tim không bị giảm kích thước [10, 11].",
+                        hint: "Nhịp tim ổn định là do duy trì được tiền tải từ tĩnh mạch rốn cho đến khi phổi nở."
+                    },
+                    {
+                        question: "Phát biểu: Việc thực hiện các bước hồi sức theo lưu đồ NLS (như thông đường thở, nở phổi) trong khi dây rốn vẫn chưa cắt là hoàn toàn khả thi nếu có thiết bị phù hợp như giường hồi sức di động cạnh mẹ [12].",
+                        isTrue: true,
+                        rationale: "Hồi sức tại giường cạnh mẹ (với dây rốn chưa cắt) đã được chứng minh là khả thi và có thể giúp trẻ tự thở sớm hơn, đạt điểm Apgar cao hơn [12, 13].",
+                        hint: "Đây là xu hướng hồi sức hiện đại nhằm tối ưu hóa sinh lý chuyển tiếp."
+                    },
+                    {
+                        question: "Phát biểu: Một cuộc họp nhóm trước sinh (Team Briefing) chuẩn mực bắt buộc phải kéo dài ít nhất 15 phút để đảm bảo phân công đủ tất cả các vai trò trong kíp hồi sức [14].",
+                        isTrue: false,
+                        rationale: "Cuộc họp nhóm thường chỉ diễn ra trong vài phút nhưng vẫn đảm bảo sự rõ ràng, hiệu quả và tránh trùng lặp công việc [14].",
+                        hint: "Trong tình huống cấp cứu sản khoa, thời gian là vàng."
+                    },
+                    {
+                        question: "Phát biểu: Ở trẻ sinh non dưới 34 tuần, kẹp rốn muộn không chỉ cải thiện tỷ lệ sống sót mà còn làm giảm đáng kể nhu cầu phải truyền máu sau này [15].",
+                        isTrue: true,
+                        rationale: "Phân tích tổng hợp cho thấy DCC ở trẻ < 34 tuần giúp cải thiện ổn định tim mạch, tăng trị số HA trung bình và giảm tổng số lần truyền máu [15].",
+                        hint: "Một trong những lợi ích quan trọng nhất đối với hệ huyết học của trẻ non tháng."
+                    },
+                    {
+                        question: "Phát biểu: Giáo trình NLS 2021 khuyến cáo tránh sử dụng thuật ngữ kẹp rốn \"chậm\" mà nên dùng từ \"muộn\" để ám chỉ hành động này là không sinh lý [6, 16].",
+                        isTrue: false,
+                        rationale: "Thuật ngữ \"chậm\" và \"muộn\" được coi là như nhau. Tuy nhiên, việc gọi là \"muộn\" vô hình trung khiến kẹp rốn ngay (ICC) được xem là \"bình thường\", dù ICC thực tế mới là can thiệp không hợp sinh lý [6, 16].",
+                        hint: "Thực tế hai thuật ngữ này thường được dùng thay thế cho nhau trong y văn."
+                    },
+                    {
+                        question: "Phát biểu: Khi thực hiện kẹp rốn muộn, trẻ bắt buộc phải được giữ ở vị trí thấp hơn mức bánh nhau để đảm bảo máu chảy từ mẹ sang con theo trọng lực.",
+                        isTrue: false,
+                        rationale: "Tài liệu không yêu cầu vị trí thấp hơn; trẻ khỏe mạnh có thể được đặt ngay trên bụng mẹ (da kề da) để lau khô và đánh giá trong khi chờ kẹp rốn [17].",
+                        hint: "Hãy xem xét liệu trọng lực có phải là yếu tố quyết định duy nhất cho việc truyền máu bánh nhau không."
+                    },
+                    {
+                        question: "Phát biểu: Dụng cụ kẹp rốn kim loại (giống loại hiện nay) được phát minh vào năm 1899 chính là nguyên nhân trực tiếp dẫn đến thói quen kẹp rốn sớm phổ biến trong y học hiện đại [15].",
+                        isTrue: false,
+                        rationale: "Dù dụng cụ được phát minh năm 1899, nhưng nhà phát minh vẫn khuyên sử dụng nó \"khi dây rốn ngừng đập\". Thói quen kẹp sớm chủ yếu do sự gia tăng ca sinh mổ và quan niệm sai lầm về việc tránh trì hoãn hồi sức [15, 18].",
+                        hint: "Một dụng cụ có thể được dùng đúng hoặc sai thời điểm."
+                    },
+                    {
+                        question: "Phát biểu: Việc nhóm sơ sinh/nhi khoa có tên trong bảng kiểm trước phẫu thuật (WHO Surgical Safety Checklist) giúp ngăn chặn đến 80% sự cố y khoa nghiêm trọng tại phòng mổ [19].",
+                        isTrue: true,
+                        rationale: "Bảng kiểm cải thiện tinh thần làm việc nhóm và giao tiếp (SBAR), giúp giảm thiểu đáng kể các sai sót hệ thống dẫn đến thảm họa [19, 20].",
+                        hint: "Giao tiếp và chuẩn bị là chìa khóa của an toàn phẫu thuật."
+                    }
+                ]
+            },
+            7: {
+                title: "Chương 7: Giúp thở bằng mặt nạ",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Để tạo tư thế đầu trung gian tối ưu cho trẻ sơ sinh nằm trên mặt phẳng, cần đặt một cuộn khăn dày khoảng 5 cm dưới vai của trẻ [1].",
+                        isTrue: false,
+                        rationale: "Cuộn khăn chỉ nên dày khoảng 2 cm; độ dày 5 cm là quá cao và có thể gây ngửa cổ quá mức, làm tắc nghẽn đường thở [1, 3].",
+                        hint: "Hãy nhớ rằng vùng chẩm của trẻ sơ sinh rất lớn, một độ cao quá mức có thể gây ra hiệu ứng ngược lại [2]."
+                    },
+                    {
+                        question: "Phát biểu: Khi nâng cằm để thông đường thở, nhân viên y tế cần đặt ngón tay đè lên phần sụn mềm dưới cằm để tạo lực đòn bẩy nâng đáy lưỡi lên [1].",
+                        isTrue: false,
+                        rationale: "Tuyệt đối tránh đè lên phần sụn mềm dưới cằm vì hành động này thực tế sẽ đẩy đáy lưỡi tụt về sau và làm tắc nghẽn thêm đường thở [4, 5].",
+                        hint: "Cấu trúc vùng hầu họng của trẻ rất mềm và dễ bị biến dạng cơ học."
+                    },
+                    {
+                        question: "Phát biểu: Thủ thuật ấn hàm bằng hai bàn tay được xem là phương pháp thông đường thở hiệu quả nhất cho trẻ mềm nhũn và hôn mê [5].",
+                        isTrue: true,
+                        rationale: "Ấn hàm bằng hai bàn tay giúp đẩy hàm và đáy lưỡi ra trước hiệu quả nhất, nhưng do cần dùng cả hai tay nên thường cần thêm người thứ hai hỗ trợ bóp bóng [5, 6].",
+                        hint: "Thủ thuật này đòi hỏi sự phối hợp của nhiều người để có thể thực hiện đồng thời các bước khác."
+                    },
+                    {
+                        question: "Phát biểu: Ở một trẻ sơ sinh cần hồi sức, áp lực tối thiểu cần thiết để vượt qua \"áp lực mở phổi\" và đưa khí vào phế nang luôn hằng định ở mức 10 cmH2O [7].",
+                        isTrue: false,
+                        rationale: "Áp lực mở phổi trung bình là khoảng 20 cmH2O, dao động từ 15–30 cmH2O tùy trường hợp [7].",
+                        hint: "Phổi trẻ lúc sinh chứa đầy dịch, đòi hỏi áp lực đủ mạnh để thắng sức căng bề mặt."
+                    },
+                    {
+                        question: "Phát biểu: Năm nhịp nở phổi đầu tiên (Inflation breaths) cần được duy trì thời gian hít vào từ 2 đến 3 giây cho mỗi nhịp [3, 7].",
+                        isTrue: true,
+                        rationale: "Thời gian 2–3 giây là cần thiết để tạo áp lực thủy tĩnh đủ lâu giúp dịch phế nang thấm vào mô kẽ [8, 9].",
+                        hint: "Đây là thông số quan trọng nhất để đẩy dịch phổi vào mô kẽ thay vì chỉ bóp hỗ trợ thông thường."
+                    },
+                    {
+                        question: "Phát biểu: Ngay khi thực hiện nhịp nở phổi đầu tiên, nếu thành công, bạn sẽ thấy lồng ngực của trẻ di động ngay lập tức [10].",
+                        isTrue: false,
+                        rationale: "Hai hoặc ba nhịp đầu chỉ đẩy dịch ra khỏi phế nang nên thường không làm thay đổi thể tích lồng ngực; do đó không nên kỳ vọng ngực di động trước nhịp thứ 4 hoặc thứ 5 [10, 11].",
+                        hint: "Hai hoặc ba nhịp thở đầu tiên đóng vai trò gì trong việc xử trí dịch phổi?"
+                    },
+                    {
+                        question: "Phát biểu: Nếu nước ối có phân su sậm đặc và trẻ sinh ra mềm nhũn, bước đầu tiên là phải đặt nội khí quản để \"hút mù\" thật sạch khí quản trước khi làm nở phổi [12].",
+                        isTrue: false,
+                        rationale: "Phải ưu tiên làm nở phổi trong phút đầu đời. Chỉ đặt nội khí quản hút khi quan sát trực tiếp nếu thông khí mặt nạ không hiệu quả và ngực không di động [12-14].",
+                        hint: "NLS 2021 nhấn mạnh việc tránh trì hoãn các bước cứu sống cơ bản."
+                    },
+                    {
+                        question: "Phát biểu: Đối với trẻ sơ sinh có tuổi thai từ 32 tuần trở lên, khuyến cáo luôn bắt đầu hồi sức với nồng độ oxy hít vào là 30% [15].",
+                        isTrue: false,
+                        rationale: "Đối với trẻ ≥32 tuần, luôn bắt đầu hồi sức với khí trời (21% oxy) [15, 16].",
+                        hint: "Một chính sách an toàn để tránh stress oxy hóa cho trẻ đủ tháng."
+                    },
+                    {
+                        question: "Phát biểu: Ở trẻ sinh non dưới 32 tuần, mục tiêu lâm sàng quan trọng là phải tránh tình trạng độ bão hòa SpO2 thấp hơn 80% tại thời điểm 5 phút sau sinh [17, 18].",
+                        isTrue: true,
+                        rationale: "SpO2 < 80% ở phút thứ 5 đối với trẻ cực non có liên quan đến kết cục điều trị kém [17, 18].",
+                        hint: "Ngưỡng này liên quan mật thiết đến tiên lượng tử vong và bệnh tật lâu dài."
+                    },
+                    {
+                        question: "Phát biểu: Dụng cụ ống T là thiết bị hoàn hảo vì có thể cung cấp PEEP và PIP hằng định mà không cần phụ thuộc vào bất kỳ nguồn khí nén nào bên ngoài [19].",
+                        isTrue: false,
+                        rationale: "Ống T hoạt động bằng khí và bắt buộc phải có nguồn khí nén áp lực cao để vận hành [19, 20].",
+                        hint: "Hãy nghĩ về nguyên lý vận hành của thiết bị này trong bối cảnh sinh tại nhà."
+                    },
+                    {
+                        question: "Phát biểu: Trong kỹ thuật 3P, chữ \"Pull\" có nghĩa là dùng tay đè thật mạnh mặt nạ xuống mặt trẻ để ngăn rò rỉ khí [21].",
+                        isTrue: false,
+                        rationale: "\"Pull\" có nghĩa là nâng hoặc kéo hàm dưới lên về phía mặt nạ, chứ không phải đè mặt nạ xuống [21, 22].",
+                        hint: "Hãy nhớ về 3 chữ P: Position - Pressure - Pull."
+                    },
+                    {
+                        question: "Phát biểu: Mặt nạ thanh quản (LMA/i-gel) cỡ số 1 là lựa chọn phù hợp để ổn định đường thở cho mọi trẻ sinh non, kể cả trẻ cực non nặng 800g [23].",
+                        isTrue: false,
+                        rationale: "LMA/i-gel cỡ số 1 chỉ dùng cho trẻ > 2.000g hoặc tuổi thai > 34 tuần [3, 23, 24].",
+                        hint: "Có một giới hạn về cân nặng và giải phẫu cho việc sử dụng dụng cụ này."
+                    },
+                    {
+                        question: "Phát biểu: Sau khi phổi đã nở thành công bằng 5 nhịp ban đầu, nếu trẻ vẫn chưa tự thở, cần duy trì nhịp bóp hỗ trợ với tần số 30 lần/phút [3, 25].",
+                        isTrue: true,
+                        rationale: "Chỉ cần tần số 30 lần/phút là đủ để duy trì trao đổi khí sau khi phổi đã được nở phồng [3, 25, 26].",
+                        hint: "Tần số này thấp hơn nhịp thở sinh lý thông thường của trẻ."
+                    },
+                    {
+                        question: "Phát biểu: Việc duy trì nhịp nở phổi kéo dài trên 15 giây (Sustained Inflation) đã được chứng minh là giúp giảm tỷ lệ tử vong ở trẻ cực non dưới 28 tuần [27].",
+                        isTrue: false,
+                        rationale: "Nghiên cứu SAIL cho thấy việc duy trì nở phổi > 5 giây thực tế làm tăng tỷ lệ tử vong ở trẻ < 28 tuần và không được khuyến cáo [7, 27].",
+                        hint: "Hãy nhớ về kết quả của nghiên cứu SAIL."
+                    },
+                    {
+                        question: "Phát biểu: Nếu nghi ngờ trẻ bị phổi cứng (do thiếu Surfactant), bạn có thể tăng áp lực hít vào đỉnh (PIP) theo từng nấc từ 2–5 cmH2O để vượt qua áp lực mở phổi [28, 29].",
+                        isTrue: true,
+                        rationale: "Tăng áp lực dần dần là cần thiết trong trường hợp phổi cứng, nhưng phải giảm ngay khi thấy nhịp tim tăng hoặc ngực di động [28-30].",
+                        hint: "Cần thận trọng để tránh gây tràn khí màng phổi khi dùng áp lực cao."
+                    },
+                    {
+                        question: "Phát biểu: Để đánh giá chính xác lượng oxy cung cấp đến não bộ, cảm biến SpO2 luôn luôn phải được đặt ở tay trái của trẻ [31].",
+                        isTrue: false,
+                        rationale: "Cảm biến phải đặt ở tay phải để đo bão hòa oxy trước ống động mạch, phản ánh đúng lượng oxy lên não [31, 32].",
+                        hint: "Vị trí này liên quan đến khái niệm \"trước ống\" (pre-ductal) hay \"sau ống\" (post-ductal)."
+                    },
+                    {
+                        question: "Phát biểu: Sử dụng ống thông miệng hầu (Guedel) được khuyến khích là biện pháp thường quy cho mọi trẻ sinh non để hỗ trợ đường thở [33].",
+                        isTrue: false,
+                        rationale: "Nghiên cứu cho thấy đặt ống thông miệng hầu có thể làm tăng tắc nghẽn đường thở khi áp dụng cho trẻ sinh non, nên cần hết sức thận trọng [33].",
+                        hint: "Trẻ sinh non có cấu trúc đường thở rất nhạy cảm với các vật thể cứng."
+                    },
+                    {
+                        question: "Phát biểu: Tuyệt đối không được nối bất kỳ thiết bị hồi sức nào trực tiếp vào oxy tường nếu hệ thống không tích hợp van xả áp lực phù hợp [34, 35].",
+                        isTrue: true,
+                        rationale: "Nối trực tiếp có thể gây ra áp lực và thể tích khí quá mức, dẫn đến vỡ phế nang và tràn khí màng phổi ngay lập tức [34, 35].",
+                        hint: "Áp lực từ nguồn khí tường là cực kỳ lớn so với dung tích phổi trẻ sơ sinh."
+                    },
+                    {
+                        question: "Phát biểu: Khi nhịp tim không tăng, việc nghe phế âm bằng ống nghe là biện pháp đáng tin cậy duy nhất để xác định phổi đã được thông khí thành công hay chưa [36].",
+                        isTrue: false,
+                        rationale: "Nghe phế âm có thể gây nhầm lẫn do dẫn truyền âm thanh từ đường thở trên; quan sát lồng ngực di động mới là cách đánh giá thực tế và chính xác hơn [36, 37].",
+                        hint: "Âm thanh từ đường thở trên có thể đánh lừa người thính chẩn không?"
+                    },
+                    {
+                        question: "Phát biểu: Khí quản của trẻ mới sinh có đặc điểm giải phẫu là hẹp dần về phía dây thanh âm, tạo thành hình cái phễu, giúp việc đặt nội khí quản luôn dễ dàng hơn người lớn [38].",
+                        isTrue: true,
+                        rationale: "Cấu trúc hình phễu và thanh quản hướng về phía trước là những đặc điểm giải phẫu quan trọng cần lưu ý khi thực hiện các thủ thuật đường thở [38].",
+                        hint: "Hình dạng phễu làm cho phần nào của đường thở trở nên hẹp nhất?"
+                    }
+                ]
+            },
+            8: {
+                title: "Chương 8: Tuần hoàn & Thuốc",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Bắt đầu ấn tim ngay lập tức khi phát hiện nhịp tim trẻ dưới 60 lần/phút, bất kể lồng ngực đã di động hay chưa.",
+                        isTrue: false,
+                        rationale: "Chỉ ấn tim khi nhịp tim < 60 bpm sau khi đã đảm bảo thông khí hiệu quả (ngực di động) trong ít nhất 30 giây [2, 3].",
+                        hint: "Hãy nhớ về nguyên tắc: Máu đưa về vành phải là máu đã được oxy hóa [1]."
+                    },
+                    {
+                        question: "Phát biểu: Khi bắt đầu thực hiện ấn tim, bắt buộc phải tăng nồng độ oxy hít vào (FiO2) lên mức 100% để tối ưu hóa oxy hóa cơ tim [2, 3].",
+                        isTrue: true,
+                        rationale: "Tăng oxy lên 100% giúp máu đưa từ phổi về tim có nồng độ oxy cao nhất, tạo điều kiện cho cơ tim phục hồi nhịp xoang tự phát [5, 6].",
+                        hint: "Đây là lúc tim cần nỗ lực hỗ trợ cao nhất [4]."
+                    },
+                    {
+                        question: "Phát biểu: Tỷ số phối hợp ấn tim và bóp bóng cho mọi trẻ sơ sinh tại phòng sinh là 3:1, đạt mục tiêu 90 lần ấn và 30 lần bóp mỗi phút [7].",
+                        isTrue: true,
+                        rationale: "Tỷ số 3:1 được đồng thuận dựa trên sinh lý sơ sinh (ưu tiên hô hấp) để đảm bảo tần số thông khí đầy đủ [7, 8].",
+                        hint: "Tỷ số này khác với tỷ số dành cho trẻ lớn hoặc người lớn."
+                    },
+                    {
+                        question: "Phát biểu: Kỹ thuật ấn tim bằng hai ngón tay được ưu tiên hơn kỹ thuật hai ngón cái vì nó giúp giảm bớt sự mệt mỏi cho người cấp cứu trong ca hồi sức kéo dài.",
+                        isTrue: false,
+                        rationale: "Kỹ thuật hai ngón cái (hai bàn tay ôm ngực) hiệu quả hơn và ít gây mệt mỏi hơn so với kỹ thuật hai ngón tay [9, 10].",
+                        hint: "Kỹ thuật nào tạo ra huyết áp động mạch và áp lực tưới máu vành cao hơn? [9]."
+                    },
+                    {
+                        question: "Phát biểu: Độ sâu ấn tim chuẩn ở trẻ sơ sinh phải đạt ít nhất một phần hai (1/2) đường kính trước sau của lồng ngực.",
+                        isTrue: false,
+                        rationale: "Khuyến cáo chuẩn là ấn sâu một phần ba (1/3) độ dày lồng ngực; 1/2 có thể gây hại cho các tạng bên dưới [11, 12].",
+                        hint: "Hãy cân nhắc giữa hiệu quả tống máu và rủi ro sang chấn nội tạng [11]."
+                    },
+                    {
+                        question: "Phát biểu: Trong quá trình ấn tim, tay người thực hiện phải luôn giữ áp lực nhẹ trên xương ức, không được nhấc hẳn ra để tránh làm sai lệch vị trí ấn.",
+                        isTrue: false,
+                        rationale: "Phải để lồng ngực phồng trở lại hoàn toàn sau mỗi nhịp ấn để có đủ thời gian cho máu đổ đầy buồng tim trong thì tâm trương [13, 14].",
+                        hint: "Máu quay về tim ở thời điểm nào trong chu kỳ CPR? [13]."
+                    },
+                    {
+                        question: "Phát biểu: Khi trẻ đã được đặt ống nội khí quản, nhân viên y tế nên chuyển sang kỹ thuật ấn tim và bóp bóng không đồng bộ (như ở người lớn).",
+                        isTrue: false,
+                        rationale: "NLS 2021 vẫn khuyến cáo ấn tim và bóp bóng đồng bộ 3:1 ngay cả khi đã đặt NKQ để tránh việc nhịp ấn tim triệt tiêu nhịp thông khí [15, 16].",
+                        hint: "Nghiên cứu heo sơ sinh cho thấy điều gì về các nhịp bóp bóng bị cản trở? [15]."
+                    },
+                    {
+                        question: "Phát biểu: Tĩnh mạch rốn (UVC) là đường tiếp cận tĩnh mạch trung tâm nhanh nhất và được coi là phương pháp chính để dùng thuốc trong quá trình hồi sức [17, 18].",
+                        isTrue: true,
+                        rationale: "Khi tuần hoàn ngưng, thuốc qua tĩnh mạch ngoại biên khó về tim; UVC là đường truyền nhanh nhất để đưa thuốc thẳng vào tuần hoàn trung tâm [18, 19].",
+                        hint: "Hãy so sánh với tốc độ của tĩnh mạch ngoại biên trong trạng thái ngưng tim."
+                    },
+                    {
+                        question: "Phát biểu: Liều Adrenaline chuẩn qua đường tĩnh mạch rốn là 20 microgram/kg, tương đương với 0,2 mL/kg dung dịch nồng độ 1:10.000 [20].",
+                        isTrue: true,
+                        rationale: "Đây là liều lượng khuyến cáo để co mạch hệ thống, tăng HA tâm trương và tăng áp lực tưới máu vành [5, 20].",
+                        hint: "Lưu ý nồng độ và liều lượng trên mỗi kg cân nặng."
+                    },
+                    {
+                        question: "Phát biểu: Nếu chưa lập được đường truyền, Adrenaline có thể được cho qua ống nội khí quản với cùng liều lượng như đường tĩnh mạch rốn.",
+                        isTrue: false,
+                        rationale: "Liều qua ống nội khí quản phải cao hơn (100 microgram/kg) vì dịch phổi làm giảm đáng kể hiệu quả hấp thu [20, 21].",
+                        hint: "Dịch phổi thai nhi ảnh hưởng thế nào đến sự hấp thu thuốc? [21]."
+                    },
+                    {
+                        question: "Phát biểu: Glucose 10% (liều 250 mg/kg) nên được cân nhắc sử dụng cho những trẻ không đáp ứng với Adrenaline trong hồi sức kéo dài [22, 23].",
+                        isTrue: true,
+                        rationale: "Khi thiếu oxy kéo dài, dự trữ Glycogen tại tim cạn kiệt; Glucose giúp cung cấp năng lượng cần thiết cho cơ tim phục hồi hoạt động [24, 25].",
+                        hint: "Dự trữ glycogen của tim bị ảnh hưởng thế nào khi thiếu oxy? [24]."
+                    },
+                    {
+                        question: "Phát biểu: Bicarbonate là thuốc lựa chọn hàng đầu và nên được bơm bolus nhanh ngay khi bắt đầu ấn tim để trung hòa toan máu [26].",
+                        isTrue: false,
+                        rationale: "Bicarbonate chỉ dùng khi hồi sức kéo dài không đáp ứng; phải tiêm tĩnh mạch chậm và không bao giờ dùng qua ống nội khí quản [14, 26].",
+                        hint: "Thuốc này có tác dụng gì đối với khả năng gắn kết của Adrenaline? [21]."
+                    },
+                    {
+                        question: "Phát biểu: Khi nghi ngờ mất máu hoặc sốc, bồi hoàn thể tích ban đầu khuyến cáo là 10 mL/kg dung dịch Natri Chloride 0,9% hoặc máu nhóm O Rh âm [27].",
+                        isTrue: true,
+                        rationale: "Liều bolus 10 mL/kg truyền chậm trong 2 phút giúp khôi phục tiền tải và thể tích tuần hoàn hiệu hữu [2, 27].",
+                        hint: "Thể tích này nên được bơm nhanh hay chậm?"
+                    },
+                    {
+                        question: "Phát biểu: Vị trí ấn tim chuẩn là tại một phần ba dưới của xương ức, được xác định bằng cách đặt ngón tay ngay dưới đường nối giữa hai núm vú [28].",
+                        isTrue: true,
+                        rationale: "Vị trí này giúp ép trực tiếp lên tâm thất mà không làm tổn thương gan của trẻ sơ sinh [28].",
+                        hint: "Tránh ấn quá thấp để bảo vệ nội tạng nào?"
+                    },
+                    {
+                        question: "Phát biểu: Nếu một trẻ đủ tháng hoàn toàn không có nhịp tim sau 20 phút hồi sức tích cực đúng kỹ thuật, nhóm hồi sức nên cân nhắc việc ngưng các nỗ lực cấp cứu [29, 30].",
+                        isTrue: true,
+                        rationale: "Sau 20 phút vô tâm thu dù đã hồi sức đúng cách, tiên lượng về sống sót và phục hồi thần kinh là cực kỳ thấp [29, 32].",
+                        hint: "Con số này dựa trên bằng chứng về tỷ lệ tử vong và khuyết tật não nghiêm trọng [31]."
+                    }
+                ]
+            },
+            9: {
+                title: "Chương 9: Trẻ sinh non",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Mọi trẻ sơ sinh dự kiến sinh trước 27 tuần tuổi thai nên được sinh ra và chăm sóc tại các trung tâm sơ sinh mức độ 3 (Tertiary centers) để tối ưu hóa kết quả điều trị [3, 4].",
+                        isTrue: true,
+                        rationale: "Trẻ sinh cực non (<28 tuần) hoặc rất non (<32 tuần) có kết quả tốt hơn rõ rệt nếu được sinh tại các trung tâm chuyên khoa có đủ trang thiết bị và nhân sự kinh nghiệm [3, 4].",
+                        hint: "Đây là ngưỡng tuổi thai đòi hỏi sự chăm sóc hồi sức tích cực và chuyên sâu nhất."
+                    },
+                    {
+                        question: "Phát biểu: Ngay sau sinh, trẻ dưới 32 tuần tuổi thai cần được lau khô thật nhanh để tránh mất nhiệt do bay hơi trước khi đưa vào túi nhựa polythene [5, 6].",
+                        isTrue: false,
+                        rationale: "Trẻ < 32 tuần phải được đưa vào túi nhựa ngay lập tức khi còn ướt và đặt dưới đèn sưởi; việc lau khô không được khuyến cáo vì gây mất nhiệt nhanh chóng [5, 6].",
+                        hint: "Việc lau khô có thể vô tình làm tăng mất nhiệt ở nhóm trẻ cực non này."
+                    },
+                    {
+                        question: "Phát biểu: Khi trẻ đã ở trong túi polythene, bạn không nên phủ thêm bất kỳ khăn nào lên trên túi vì sẽ làm cản trở nguồn nhiệt từ đèn sưởi bức xạ đến trẻ [7].",
+                        isTrue: true,
+                        rationale: "Để đèn sưởi chiếu trực tiếp vào túi nhựa sẽ giúp duy trì thân nhiệt trẻ hiệu quả nhất; việc phủ thêm khăn lên túi là dư thừa và làm giảm hiệu quả sưởi [7].",
+                        hint: "Cơ chế sưởi bức xạ cần đường truyền trực tiếp từ nguồn nhiệt đến bề mặt túi."
+                    },
+                    {
+                        question: "Phát biểu: Ở trẻ sinh non, việc áp mặt nạ lên mặt có thể kích thích phản xạ phế vị, dẫn đến ngưng thở tạm thời hoặc chậm nhịp tim [8, 9].",
+                        isTrue: true,
+                        rationale: "Trẻ sinh non có hệ thần kinh nhạy cảm; áp lực mặt nạ có thể gây ra phản xạ ức chế hô hấp, đòi hỏi thao tác phải nhẹ nhàng [8, 9].",
+                        hint: "Đây là một phản xạ ức chế đặc thù của hệ thần kinh chưa trưởng thành."
+                    },
+                    {
+                        question: "Phát biểu: Đối với trẻ sinh non tự thở hoặc cần bóp bóng, mức áp lực dương cuối kỳ thở ra (PEEP) hoặc CPAP khởi đầu phù hợp là từ 5 đến 8 cmH2O [10, 11].",
+                        isTrue: true,
+                        rationale: "Mức 5–8 cmH2O là tiêu chuẩn để phòng ngừa xẹp phế nang thì thở ra và giảm nhu cầu đặt nội khí quản [10, 11].",
+                        hint: "Mức áp lực này giúp thiết lập và duy trì dung tích cặn chức năng (FRC)."
+                    },
+                    {
+                        question: "Phát biểu: Khởi đầu các nhịp nở phổi cho trẻ dưới 32 tuần với áp lực đỉnh (PIP) là 30 cmH2O để đảm bảo vượt qua áp lực mở của phổi cứng [10, 12].",
+                        isTrue: false,
+                        rationale: "Đối với trẻ < 32 tuần, khuyến cáo bắt đầu với áp lực thấp hơn, khoảng 25 cmH2O, để tránh Volutrauma/Barotrauma [10, 12, 13].",
+                        hint: "Phổi trẻ non tháng dễ bị tổn thương do áp lực (Barotrauma)."
+                    },
+                    {
+                        question: "Phát biểu: Việc duy trì nhịp nở phổi trên 5 giây (ví dụ 15 giây) được khuyến khích ở trẻ cực non để đẩy dịch phổi nhanh hơn [14, 15].",
+                        isTrue: false,
+                        rationale: "Nghiên cứu SAIL cho thấy duy trì nở phổi > 5 giây làm tăng tỷ lệ tử vong ở trẻ < 28 tuần, do đó NLS chỉ khuyến cáo nhịp 2–3 giây [14, 15].",
+                        hint: "Hãy nhớ về kết quả của nghiên cứu SAIL trên nhóm trẻ < 28 tuần."
+                    },
+                    {
+                        question: "Phát biểu: Đối với trẻ cực non dưới 28 tuần tuổi thai, nồng độ oxy khởi đầu khi bóp bóng hỗ trợ nên là 30% [10, 16].",
+                        isTrue: true,
+                        rationale: "Khuyến cáo chuẩn: ≥ 32 tuần (21%), 28–31 tuần (21–30%), và < 28 tuần (30%) [10, 16].",
+                        hint: "Đây là sự cân bằng giữa việc cung cấp oxy và tránh stress oxy hóa tế bào."
+                    },
+                    {
+                        question: "Phát biểu: Ở trẻ dưới 32 tuần, nếu độ bão hòa SpO2 thấp hơn 80% tại thời điểm 5 phút sau sinh, kíp hồi sức cần tăng dần nồng độ oxy cung cấp [5, 17].",
+                        isTrue: true,
+                        rationale: "SpO2 < 80% lúc 5 phút ở trẻ sinh non liên quan đến kết quả điều trị kém, do đó cần điều chỉnh nồng độ oxy để đạt SpO2 mục tiêu (85%) [5, 17].",
+                        hint: "Ngưỡng 80% lúc 5 phút là chỉ số tiên lượng quan trọng cho kết cục thần kinh."
+                    },
+                    {
+                        question: "Phát biểu: Trong quá trình thông khí hỗ trợ cho trẻ sinh non, mục tiêu thể tích khí lưu thông (Vt) nên được duy trì trong khoảng từ 4 đến 8 mL/kg [18].",
+                        isTrue: true,
+                        rationale: "Đây là mức Vt an toàn để đảm bảo trao đổi khí mà không gây căng giãn phế nang quá mức [18].",
+                        hint: "Con số này tương đương với Vt sinh lý của trẻ khi thở CPAP."
+                    },
+                    {
+                        question: "Phát biểu: Phương pháp LISA cho phép bơm surfactant qua một catheter nhỏ đặt giữa hai dây thanh âm trong khi trẻ vẫn đang được hỗ trợ thở CPAP qua ngạnh mũi [10, 19].",
+                        isTrue: true,
+                        rationale: "LISA (Less Invasive Surfactant Administration) là xu hướng hiện đại giúp điều trị RDS sớm mà không cần thông khí cơ học xâm lấn [10, 19].",
+                        hint: "Đây là kỹ thuật ít xâm lấn giúp tránh đặt nội khí quản và thở máy."
+                    },
+                    {
+                        question: "Phát biểu: Ở trẻ sinh non, cảm biến SpO2 có thể đặt ở bất kỳ vị trí nào (tay hoặc chân) vì ống động mạch thường đóng rất nhanh sau khi dùng PEEP [20].",
+                        isTrue: false,
+                        rationale: "Bắt buộc phải đo ở tay phải (trước ống) để phản ánh chính xác lượng oxy cung cấp cho não bộ [20, 21].",
+                        hint: "Sự khác biệt giữa máu \"trước ống\" và \"sau ống\" là cực kỳ quan trọng để đánh giá oxy não."
+                    },
+                    {
+                        question: "Phát biểu: Trong trường hợp nhịp tim chậm và phổi cứng không nở, Surfactant nên được bơm bolus nhanh như một loại thuốc cấp cứu để cải thiện thông khí ngay lập tức [22].",
+                        isTrue: false,
+                        rationale: "Surfactant không phải thuốc cấp cứu; bơm nhanh có thể gây nghẽn đường thở cơ học. Chỉ dùng khi trẻ đã ổn định hoặc sau khi đã đặt nội khí quản [22].",
+                        hint: "Một lượng dịch lớn bơm vào đường thở lúc chưa ổn định sẽ gây ra hậu quả gì?"
+                    },
+                    {
+                        question: "Phát biểu: Trì hoãn kẹp rốn (DCC) ở trẻ sinh non dưới 34 tuần giúp cải thiện tỷ lệ sống sót và giảm nhu cầu truyền máu sau này [23].",
+                        isTrue: true,
+                        rationale: "Các bằng chứng y học cho thấy DCC giúp trẻ sinh non có huyết áp trung bình cao hơn và ít phải dùng thuốc vận mạch hơn trong 24 giờ đầu [23, 24].",
+                        hint: "DCC mang lại lợi ích huyết học và ổn định huyết động cho trẻ non tháng."
+                    },
+                    {
+                        question: "Phát biểu: Nhiệt độ phòng mổ/phòng sinh nơi đón trẻ dưới 28 tuần tuổi thai nên được duy trì ở mức tối thiểu là 26°C [25].",
+                        isTrue: true,
+                        rationale: "Nhiệt độ phòng cao kết hợp với các biện pháp bảo vệ (túi nhựa, đèn sưởi) là cần thiết để bảo vệ trẻ cực non [25].",
+                        hint: "Một môi trường ấm áp là điều kiện tiên quyết để ngăn hạ thân nhiệt ngay từ giây đầu tiên."
+                    },
+                    {
+                        question: "Phát biểu: Trẻ sinh non từ 34 đến 36 tuần tuổi thai nên được tiếp cận theo lưu đồ điều chỉnh đặc biệt dành riêng cho trẻ sinh non (vào túi nilon ngay, PIP 25 cmH2O) [8, 26].",
+                        isTrue: false,
+                        rationale: "Trẻ sinh non muộn (34–36 tuần) thường được tiếp cận theo lưu đồ của trẻ đủ tháng do cơ chế sinh lý đã gần hoàn thiện [8, 13, 26].",
+                        hint: "Hãy xem xét mức độ trưởng thành sinh lý của nhóm trẻ này."
+                    }
+                ]
+            },
+            10: {
+                title: "Chương 10: Sinh ngoài phòng sinh",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Một ca sinh tại nhà không nằm trong kế hoạch (đẻ rơi) luôn được phân loại là ca sinh \"nguy cơ thấp\" nếu người mẹ không có bệnh lý nền trước đó [1].",
+                        isTrue: false,
+                        rationale: "Sinh ngoài bệnh viện không có kế hoạch nói chung có nhiều nguy cơ hơn sinh có kế hoạch, thường liên quan đến sinh non hoặc các vấn đề sức khỏe đột xuất [1].",
+                        hint: "Hãy xem xét khả năng trẻ bị sinh non hoặc các biến cố cấp tính trong chuyển dạ [1]."
+                    },
+                    {
+                        question: "Phát biểu: Khi phát hiện nước ối có phân su tại nhà, nếu sản phụ chưa sinh, cần nhanh chóng chuyển sản phụ đến bệnh viện ngay lập tức trước khi trẻ chào đời [1].",
+                        isTrue: true,
+                        rationale: "Phân su có thể là dấu hiệu suy thai; việc chuyển viện trước sinh giúp đảm bảo trẻ được tiếp cận kíp hồi sức chuyên khoa ngay khi vừa ra đời [1].",
+                        hint: "Phân su là một chỉ dấu quan trọng của tình trạng suy thai cần can thiệp chuyên sâu [1]."
+                    },
+                    {
+                        question: "Phát biểu: Trong môi trường tại gia, mặt phẳng hồi sức lý tưởng nhất cho trẻ là sàn nhà sạch vì đây là bề mặt rộng và vững chắc nhất để thao tác kỹ thuật [1].",
+                        isTrue: false,
+                        rationale: "Cần chọn mặt phẳng cao (như bàn hoặc giường), bằng phẳng, làm sạch và trải khăn sẵn để thuận tiện cho việc hồi sức [1].",
+                        hint: "Hãy cân nhắc đến tư thế làm việc của nhân viên y tế và vấn đề vệ sinh [1]."
+                    },
+                    {
+                        question: "Phát biểu: Việc đặt trẻ sơ sinh trực tiếp lên một tấm đệm lạnh hoặc khăn chưa được làm ấm là nguyên nhân gây mất nhiệt qua cơ chế đối lưu [1].",
+                        isTrue: false,
+                        rationale: "Tiếp xúc bề mặt lạnh gây mất nhiệt do dẫn truyền (conduction). Đối lưu (convection) là do gió lùa từ cửa sổ hoặc cửa ra vào [1].",
+                        hint: "Đối lưu liên quan đến luồng khí, còn tiếp xúc bề mặt là cơ chế gì? [1]."
+                    },
+                    {
+                        question: "Phát biểu: Có thể sử dụng chai nước nóng đặt áp sát vào da trẻ để làm ấm nhanh trong trường hợp trẻ bị hạ thân nhiệt nặng ngoài phòng sinh [1].",
+                        isTrue: false,
+                        rationale: "Chai nước nóng có thể dùng để làm ấm bề mặt khăn/đệm nhưng tuyệt đối không được tiếp xúc trực tiếp với trẻ vì gây nguy cơ bỏng nặng [1].",
+                        hint: "Da trẻ sơ sinh cực kỳ mỏng manh và nhạy cảm với nhiệt độ cao [1]."
+                    },
+                    {
+                        question: "Phát biểu: Áp dụng phương pháp xử trí sinh lý giai đoạn 3 của chuyển dạ (chờ sổ nhau tự nhiên) cho phép thực hiện kẹp dây rốn muộn ít nhất 60 giây ngay cả trong môi trường ngoài bệnh viện [1].",
+                        isTrue: true,
+                        rationale: "Xử trí sinh lý giai đoạn 3 giúp kíp hỗ trợ tập trung vào trẻ và thực hiện kẹp rốn muộn, mang lại lợi ích huyết động cho trẻ [1].",
+                        hint: "Đây là cách tiếp cận ưu tiên cho trẻ ổn định để tăng thể tích máu chuyển tiếp [1]."
+                    },
+                    {
+                        question: "Phát biểu: Khi sản phụ chuyển dạ trên xe cấp cứu, kíp trực nên yêu cầu tài xế lái xe thật nhanh đến bệnh viện trong khi thực hiện các thủ thuật đỡ đẻ để tiết kiệm thời gian [1].",
+                        isTrue: false,
+                        rationale: "Không thể xử trí sinh an toàn trong xe đang di chuyển; phải dừng xe lại để thao tác và đảm bảo an toàn cho cả mẹ, con và kíp trực [1].",
+                        hint: "Sự rung lắc ảnh hưởng thế nào đến độ chính xác của các thao tác kỹ thuật? [1]."
+                    },
+                    {
+                        question: "Phát biểu: Đối với trẻ cần hỗ trợ đường thở trong quá trình chuyển viện bằng xe cấp cứu, việc sử dụng mặt nạ thanh quản (LMA) được chứng minh là hiệu quả và ổn định hơn so với thông khí qua mặt nạ thông thường [1].",
+                        isTrue: true,
+                        rationale: "LMA giúp ổn định đường thở tốt hơn mặt nạ mặt khi ngồi phía sau xe cấp cứu đang di chuyển [1].",
+                        hint: "LMA giúp hạn chế rò rỉ khí tốt hơn khi xe có những rung chấn nhỏ [1]."
+                    },
+                    {
+                        question: "Phát biểu: Bóng tự phồng là thiết bị thông khí được ưu tiên sử dụng ngoài phòng sinh vì nó hoạt động độc lập và không phụ thuộc vào nguồn khí nén áp lực cao [1].",
+                        isTrue: true,
+                        rationale: "Thiết bị ống T phụ thuộc vào nguồn khí áp lực cao thường chỉ có ở bệnh viện; bóng tự phồng phù hợp hơn cho sinh tại nhà [1].",
+                        hint: "So sánh tính di động của bóng tự phồng và thiết bị ống T (T-piece) [1]."
+                    },
+                    {
+                        question: "Phát biểu: Trong tình huống ngặt nghèo không có dụng cụ giúp thở, nhân viên y tế có thể thực hiện hồi sức bằng miệng (thổi ngạt) với 5 nhịp nở phổi ban đầu, mỗi nhịp kéo dài 2–3 giây [1].",
+                        isTrue: true,
+                        rationale: "Thổi ngạt qua cả miệng và mũi trẻ là giải pháp cuối cùng, vẫn phải tuân thủ thời gian 2-3 giây để đẩy dịch phế nang [1].",
+                        hint: "Nguyên tắc làm nở phổi (inflation) vẫn không thay đổi dù dùng phương pháp nào [1]."
+                    },
+                    {
+                        question: "Phát biểu: Sau khi trẻ ra đời trên xe cấp cứu, nhân viên y tế nên cố gắng sổ bánh nhau ngay lập tức để hoàn tất ca sinh trước khi xe tiếp tục di chuyển [1].",
+                        isTrue: false,
+                        rationale: "Không cố gắng sổ bánh nhau trong quá trình vận chuyển để tránh các biến chứng; chỉ hỗ trợ bà mẹ và theo dõi chảy máu [1].",
+                        hint: "Có rủi ro nào về băng huyết nếu sổ nhau không đúng kỹ thuật trên xe không? [1]."
+                    },
+                    {
+                        question: "Phát biểu: Túi polythene chỉ được sử dụng cho trẻ sinh non < 32 tuần tại bệnh viện và không có giá trị đối với trẻ đủ tháng sinh ngoài phòng sinh [1].",
+                        isTrue: false,
+                        rationale: "Túi polythene là một lựa chọn tốt để giảm mất nhiệt bay hơi cho cả trẻ sinh non và đủ tháng khi sinh ngoài bệnh viện hoặc trẻ yếu [1].",
+                        hint: "Túi nhựa có tác dụng gì đối với hiện tượng mất nhiệt do bay hơi? [1]."
+                    },
+                    {
+                        question: "Phát biểu: Do tính chất khẩn cấp, các ca sinh tại nhà chỉ cần ghi chép sơ lược tình trạng trẻ, việc ghi chép chi tiết chỉ bắt đầu khi trẻ đã nhập viện ổn định [1].",
+                        isTrue: false,
+                        rationale: "Hồ sơ sinh tại nhà phải được ghi chép chính xác như ở bệnh viện, bao gồm trình tự hồi sức và đáp ứng của trẻ để chia sẻ với nhóm tiếp nhận [1].",
+                        hint: "Hồ sơ này có vai trò gì trong việc bàn giao cho nhóm tiếp nhận tại bệnh viện? [1]."
+                    },
+                    {
+                        question: "Phát biểu: Khi gắn bóng tự phồng với nguồn oxy và túi dự trữ (reservoir), nồng độ oxy cung cấp cho trẻ có thể đạt mức xấp xỉ 100% [1].",
+                        isTrue: true,
+                        rationale: "Túi dự trữ oxy giúp cung cấp nồng độ oxy tối đa (>90%) vì bóng sẽ hút khí trực tiếp từ nguồn và túi này thay vì khí trời [1].",
+                        hint: "Túi dự trữ giúp ngăn không khí trời trộn lẫn vào bóng [1]."
+                    },
+                    {
+                        question: "Phát biểu: Nhiệt độ trong xe cấp cứu nên được duy trì ở mức mà người lớn cảm thấy \"hơi nóng\" là mức phù hợp để bảo vệ thân nhiệt trẻ sơ sinh [1].",
+                        isTrue: true,
+                        rationale: "Cần yêu cầu lái xe tăng nhiệt độ xe trước khi chuyển trẻ; mức nhiệt mà người lớn thấy hơi nóng là cần thiết để ngăn hạ thân nhiệt cho bé [1].",
+                        hint: "Trẻ sơ sinh cần môi trường ấm hơn nhiều so với cảm giác thoải mái của người lớn [1]."
+                    }
+                ]
+            },
+            11: {
+                title: "Chương 11: Chăm sóc sau hồi sức",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Trong chăm sóc sau hồi sức, mục tiêu thông khí là duy trì PaCO2 ở mức thấp (< 4 kPa) để hỗ trợ quá trình thải loại toan hô hấp nhanh nhất có thể. [1, 2]",
+                        isTrue: false,
+                        rationale: "Giảm PaCO2 xuống dưới 4 kPa gây co mạch não, làm giảm tưới máu não và liên quan chặt chẽ đến tổn thương thần kinh nghiêm trọng. [1, 2]",
+                        hint: "Hãy nhớ về tác động của nồng độ CO2 trong máu đối với lưu lượng máu não."
+                    },
+                    {
+                        question: "Phát biểu: Liệu pháp hạ thân nhiệt có kiểm soát nên được khởi động ngay lập tức khi trẻ vừa ra đời nếu có bằng chứng suy thai nặng, thậm chí trước khi hoàn tất các bước ABCD. [1, 3]",
+                        isTrue: false,
+                        rationale: "Tuyệt đối không hạ thân nhiệt khi chưa ổn định đường thở, thông khí và tuần hoàn (ABCD). Can thiệp sai lúc có thể gây phản tác dụng. [1, 3]",
+                        hint: "Hồi sức cơ bản hay bảo vệ não là ưu tiên sống còn tại giây đầu tiên?"
+                    },
+                    {
+                        question: "Phát biểu: Một trẻ sơ sinh ≥ 36 tuần có điểm Apgar lúc 10 phút bằng 6 nhưng kết quả khí máu cuống rốn có pH < 7,00 vẫn đủ điều kiện đạt \"Tiêu chí A\" để cân nhắc làm lạnh. [4, 5]",
+                        isTrue: true,
+                        rationale: "Tiêu chí A thỏa mãn nếu trẻ có pH < 7,00 (hoặc BE ≥ 16 mmol/L) trong vòng 60 phút sau sinh, bất kể điểm Apgar. [4, 5]",
+                        hint: "Tiêu chí A yêu cầu \"ít nhất một trong các chỉ số\" thỏa mãn ngưỡng cắt."
+                    },
+                    {
+                        question: "Phát biểu: Sau khi nhịp tim trở lại bình thường, sự xuất hiện của các nhịp thở nấc (gasping) mỗi 5–8 giây được coi là dấu hiệu phục hồi đầu tiên từ giai đoạn ngừng thở cuối cùng. [6, 7]",
+                        isTrue: true,
+                        rationale: "Thở nấc sau khi phục hồi tuần hoàn là chỉ điểm phản ánh mức độ thiếu oxy đối với hệ thần kinh trung ương. [6, 7]",
+                        hint: "Đây là nỗ lực tự động của trung tâm hô hấp tại hành tủy khi được tái cấp oxy."
+                    },
+                    {
+                        question: "Phát biểu: Trong hồ sơ pháp lý, các bác sĩ được khuyến khích sử dụng các tính từ hình tượng như \"trẻ thẳng đơ\" (flat baby) để mô tả tình trạng mềm nhũn sau sinh. [1, 8]",
+                        isTrue: false,
+                        rationale: "Từ \"flat baby\" là thuật ngữ chủ quan và bị cấm sử dụng trong văn bản y khoa/pháp lý; hồ sơ phải ghi chép dữ kiện thực tế thay vì quan điểm cá nhân. [1, 8]",
+                        hint: "Đây là thuật ngữ chủ quan hay khách quan?"
+                    },
+                    {
+                        question: "Phát biểu: Khí máu cuống rốn lấy từ trẻ được kẹp rốn muộn (sau 3 phút) thường có tính axit hơn và có thể không phản ánh chính xác tình trạng thai nhi so với mẫu lấy ngay sau sinh. [9]",
+                        isTrue: true,
+                        rationale: "Các mẫu lấy sau 3 phút rốn chưa kẹp thường bị toan hóa hơn do sự tích tụ lactate và CO2, làm giảm độ tin cậy của xét nghiệm. [9]",
+                        hint: "Sự ứ đọng toan chuyển hóa trong dây rốn sau khi sổ thai ảnh hưởng thế nào đến các thông số?"
+                    },
+                    {
+                        question: "Phát biểu: Ngưỡng đường huyết an toàn cần duy trì cho trẻ sơ sinh sau hồi sức tích cực để tránh làm trầm trọng thêm tổn thương não là ≥ 2,6 mmol/L. [10, 11]",
+                        isTrue: true,
+                        rationale: "25% trẻ bị HIE có đường huyết < 2,6 mmol/L; mức thấp này liên quan trực tiếp đến kết cục thần kinh xấu hơn trên MRI. [10, 11]",
+                        hint: "Hạ đường huyết là biến chứng thường gặp sau stress thiếu oxy."
+                    },
+                    {
+                        question: "Phát biểu: Để đạt \"Tiêu chí C\" chỉ định làm lạnh, kết quả điện não đồ tích hợp biên độ (aEEG) phải ghi nhận được hoạt động bất thường hoặc co giật trong ít nhất 60 phút liên tục. [4, 12]",
+                        isTrue: false,
+                        rationale: "Chỉ cần theo dõi aEEG ít nhất 30 phút cho thấy hoạt động cơ bản bất thường hoặc co giật là đủ để thỏa mãn tiêu chí C. [4, 12]",
+                        hint: "Khung thời gian vàng để bắt đầu liệu pháp hạ thân nhiệt là trước 6 giờ tuổi."
+                    },
+                    {
+                        question: "Phát biểu: Trẻ bị thiếu oxy mãn tính trong tử cung (như chậm tăng trưởng) thường có tiên lượng hồi phục tốt hơn trẻ bị thiếu oxy cấp tính đột ngột vì não bộ đã có cơ chế thích nghi từ trước. [6, 13]",
+                        isTrue: false,
+                        rationale: "Thiếu oxy mãn tính gây hại nhiều hơn; nó giống như động cơ bị phá hủy nghiêm trọng vì thiếu nhiên liệu kéo dài trước khi cạn kiệt hẳn, dẫn đến chết tế bào theo chương trình. [6, 13]",
+                        hint: "Hãy nhớ về hình ảnh so sánh \"động cơ thiếu nhiên liệu kéo dài\"."
+                    },
+                    {
+                        question: "Phát biểu: Khi trao đổi với cha mẹ sau ca hồi sức, bác sĩ nhi khoa nên giải thích chi tiết các sai sót (nếu có) trong quá trình quản lý thai kỳ và chuyển dạ để cha mẹ nắm rõ sự thật. [14]",
+                        isTrue: false,
+                        rationale: "Người hồi sức tuyệt đối không đưa ra nhận xét về quản lý thai kỳ hoặc chuyển dạ; nhiệm vụ này thuộc về hộ sinh và bác sĩ sản khoa. [14]",
+                        hint: "Ai là người chịu trách nhiệm chuyên môn về giai đoạn trước và trong khi đẻ?"
+                    },
+                    {
+                        question: "Phát biểu: Để đảm bảo an toàn pháp lý trước khi chuyển viện, vị trí ống nội khí quản bắt buộc phải được xác nhận bằng dụng cụ phát hiện CO2 trong khí thở ra thay vì chỉ dựa vào âm phế bào. [10, 15]",
+                        isTrue: true,
+                        rationale: "Kiểm tra CO2 là chỉ điểm tin cậy nhất xác nhận ống nằm trong khí quản, giúp tránh các biến chứng tử vong do đặt nhầm thực quản. [10, 15]",
+                        hint: "Nghe âm phế bào có thể bị đánh lừa bởi âm truyền từ đường thở trên."
+                    },
+                    {
+                        question: "Phát biểu: Liệu pháp hạ thân nhiệt làm chậm quá trình chuyển hóa của gan, do đó cần điều chỉnh (thường là giảm) liều của nhiều loại thuốc dùng cho trẻ trong giai đoạn làm lạnh. [16, 17]",
+                        isTrue: true,
+                        rationale: "Quá trình chuyển hóa thuốc qua men gan bị chậm lại khi thân nhiệt hạ, đòi hỏi bác sĩ phải điều chỉnh liều để tránh ngộ độc thuốc. [17]",
+                        hint: "Nhiệt độ thấp ảnh hưởng thế nào đến tốc độ enzym?"
+                    },
+                    {
+                        question: "Phát biểu: Trẻ sơ sinh không thể thiết lập nhịp thở hiệu quả trong vòng 30 phút sau sinh được coi là có nguy cơ rất cao bị chấn thương não đáng kể. [18]",
+                        isTrue: true,
+                        rationale: "Thời gian từ lúc tim ổn định đến lúc tự thở lại là thông số tiên lượng độ nặng của tổn thương não; mốc 30 phút là ngưỡng cảnh báo đỏ. [18]",
+                        hint: "Đây là mốc thời gian quan trọng sau khi tuần hoàn đã ổn định."
+                    },
+                    {
+                        question: "Phát biểu: Trong giai đoạn sau hồi sức, cần hạn chế tối đa việc theo dõi nồng độ Natri máu để tránh gây stress xâm lấn không cần thiết cho trẻ đang làm lạnh. [11]",
+                        isTrue: false,
+                        rationale: "Phải theo dõi Natri sát sao vì tổn thương tế bào và thiểu niệu sau ngạt rất dễ gây ra tình trạng hạ Natri máu do phân phối lại dịch. [11]",
+                        hint: "Stress thiếu oxy thường dẫn đến thiểu niệu và giữ nước."
+                    },
+                    {
+                        question: "Phát biểu: Theo hướng dẫn của Hiệp hội Y học Chu sinh Anh (BAPM), trẻ sinh non dưới 36 tuần tuổi thai hiện đã được đưa vào nhóm chỉ định thường quy cho liệu pháp hạ thân nhiệt. [19]",
+                        isTrue: false,
+                        rationale: "Hiện chưa có đủ dữ liệu RCT ủng hộ làm lạnh thường quy cho trẻ < 36 tuần; việc thực hiện phải được thảo luận kỹ với cha mẹ và cần sự hội chẩn của bác sĩ giàu kinh nghiệm. [19]",
+                        hint: "Hãy xem xét sự khác biệt về bằng chứng y học giữa trẻ đủ tháng và sinh non."
+                    }
+                ]
+            },
+            12: {
+                title: "Chương 12: Hồi sức thất bại",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Khi nhịp tim trẻ không tăng dù đã thực hiện lưu đồ, bước can thiệp kế tiếp quan trọng nhất là tiêm ngay Adrenaline để kích thích cơ tim.",
+                        isTrue: false,
+                        rationale: "Nguyên nhân chính khiến nhịp tim không tăng thường là do kiểm soát đường thở chưa tốt và thông khí chưa hiệu quả; do đó phải kiểm tra lại bước A và B trước khi dùng thuốc [1].",
+                        hint: "Hãy nhớ lại nguyên nhân hàng đầu gây thất bại trong hồi sức sơ sinh."
+                    },
+                    {
+                        question: "Phát biểu: Dụng cụ \"đầu nối hút phân su\" (meconium aspirator) chỉ được chỉ định sử dụng duy nhất cho các trường hợp nước ối có phân su đậm đặc.",
+                        isTrue: false,
+                        rationale: "Dù tên là đầu nối hút phân su, dụng cụ này được dùng để loại bỏ bất kỳ dị vật nào (máu, nhầy, chất gây) gây tắc khí quản [2].",
+                        hint: "Tên gọi của dụng cụ này có giới hạn công dụng thực tế của nó không?"
+                    },
+                    {
+                        question: "Phát biểu: Ở trẻ đủ tháng, soi \"ánh sáng lạnh\" (transillumination) là biện pháp chẩn đoán tràn khí màng phổi nhanh và tin cậy nhất ngay tại phòng sinh.",
+                        isTrue: false,
+                        rationale: "Đèn soi kém hiệu quả ở trẻ đủ tháng do độ dày da và thành ngực; chẩn đoán trong tình huống khẩn cấp chủ yếu dựa trên lâm sàng [3].",
+                        hint: "Độ dày thành ngực trẻ đủ tháng ảnh hưởng thế nào đến việc truyền sáng?"
+                    },
+                    {
+                        question: "Phát biểu: Nếu nghi ngờ trẻ bị phổi cứng (do giảm sản phổi/thiếu ối), nhân viên y tế có thể tăng áp lực hít vào đỉnh (PIP) theo từng nấc 2–5 cmH2O để đạt được di động lồng ngực.",
+                        isTrue: true,
+                        rationale: "Việc tăng dần PIP 2–5 cmH2O là cần thiết để vượt qua áp lực mở phổi trong bệnh cảnh phổi giãn nở kém [4, 5].",
+                        hint: "Phổi cứng đòi hỏi áp lực cao hơn để thắng sức cản phế nang."
+                    },
+                    {
+                        question: "Phát biểu: Khi nghi ngờ trẻ bị sốc mất máu cấp chu sinh, liều bồi hoàn thể tích ban đầu khuyến cáo là 10 mL/kg dung dịch Natri Chloride 0,9% hoặc máu.",
+                        isTrue: true,
+                        rationale: "Liều 10 mL/kg NaCl 0,9% hoặc máu là tiêu chuẩn để phục hồi tuần hoàn do mất máu cấp [6, 7].",
+                        hint: "Đây là thông số \"vàng\" trong phục hồi tiền tải sơ sinh."
+                    },
+                    {
+                        question: "Phát biểu: Nếu độ bão hòa oxy đo trước ống và sau ống động mạch chênh lệch ≥ 3%, bác sĩ phải nghĩ đến các vấn đề tim mạch bẩm sinh hoặc tăng áp phổi.",
+                        isTrue: true,
+                        rationale: "Chênh lệch SpO2 ≥ 3% giữa 2 vị trí là chỉ dấu của dị tật tim bẩm sinh tím hoặc tăng áp phổi dai dẳng [4, 8].",
+                        hint: "Sự chênh lệch này phản ánh luồng thông (shunt) trong hệ tuần hoàn."
+                    },
+                    {
+                        question: "Phát biểu: Naloxone được xem là thuốc cấp cứu thiết yếu và cần được tiêm tĩnh mạch ngay khi bắt đầu ấn tim nếu nghi ngờ mẹ lạm dụng thuốc phiện.",
+                        isTrue: false,
+                        rationale: "Naloxone không phải thuốc cấp cứu; chỉ dùng khi trẻ đã ổn định tim mạch và đường thở nhưng vẫn ngưng thở thứ phát do opiates [9, 10].",
+                        hint: "Thuốc này có tác dụng khi tim và phổi của trẻ chưa ổn định không?"
+                    },
+                    {
+                        question: "Phát biểu: Ở trẻ phù thai nhi, việc dẫn lưu dịch cổ chướng nên thực hiện từ hố chậu trái để tránh gây tổn thương gan hoặc lách.",
+                        isTrue: true,
+                        rationale: "Gan trẻ sơ sinh rất lớn chiếm bên phải, nên dẫn lưu từ hố chậu trái để đảm bảo an toàn cho các tạng đặc [11].",
+                        hint: "Hãy nhớ về giải phẫu kích thước gan của trẻ sơ sinh."
+                    },
+                    {
+                        question: "Phát biểu: Nếu nhịp tim vẫn bằng 0 sau 10 phút hồi sức, kíp trực bắt buộc phải ngưng mọi nỗ lực để chuyển sang chăm sóc giảm nhẹ.",
+                        isTrue: false,
+                        rationale: "Mốc 10 phút là để đánh giá lại hiệu quả hồi sức và các nguyên nhân có thể điều trị được; việc ngừng hồi sức thường được xem xét ở mốc 20 phút [4, 12].",
+                        hint: "Đây là thời điểm để \"đánh giá lại\" hay để \"dừng lại\"?"
+                    },
+                    {
+                        question: "Phát biểu: Việc ngừng hồi sức là thích hợp nếu trẻ không có nhịp tim sau 20 phút hồi sức tích cực đúng kỹ thuật và đã loại trừ các nguyên nhân có thể khắc phục.",
+                        isTrue: true,
+                        rationale: "Sau 20 phút vô tâm thu dù hồi sức chuẩn, tiên lượng sống sót không khuyết tật là cực kỳ thấp nên việc ngừng hồi sức là phù hợp [6, 13].",
+                        hint: "Ngưỡng thời gian này dựa trên bằng chứng về tỷ lệ tử vong và khuyết tật não rất cao."
+                    },
+                    {
+                        question: "Phát biểu: Để gia đình sớm ổn định tâm lý, mọi trẻ sinh non cực non không có nhịp tim lúc sinh nên được phân loại ngay là \"thai chết lưu\" trong hồ sơ.",
+                        isTrue: false,
+                        rationale: "Không áp dụng phân loại \"thai chết lưu\" nếu trẻ có bất kỳ dấu hiệu sự sống nào; việc phân loại sai gây tổn thương nặng nề cho gia đình [9, 14].",
+                        hint: "Các dấu hiệu sự sống có thể xuất hiện muộn ở trẻ sinh non không?"
+                    },
+                    {
+                        question: "Phát biểu: Tài liệu NLS 2021 khuyến cáo bác sĩ nên tránh sử dụng thuật ngữ \"dị tật gây chết người\" (lethal defects) vì một số trẻ vẫn có thể sống sót sau sinh.",
+                        isTrue: true,
+                        rationale: "Tuyệt đối tránh từ \"gây chết người\" vì tiên lượng sống sót có thể thay đổi và thuật ngữ này gây tổn thương tinh thần cha mẹ [15].",
+                        hint: "Thuật ngữ này có thể làm mất đi cơ hội được chăm sóc giảm nhẹ nhân văn của trẻ."
+                    },
+                    {
+                        question: "Phát biểu: Vị trí chọc dò giải áp màng phổi cấp cứu là khoang liên sườn thứ 2 trên đường giữa đòn, đâm kim bờ trên xương sườn thứ 3.",
+                        isTrue: true,
+                        rationale: "Đâm kim bờ trên xương sườn 3 giúp tránh bó mạch thần kinh chạy dọc bờ dưới mỗi xương sườn [16, 17].",
+                        hint: "Hãy nhớ nguyên tắc tránh bó mạch thần kinh dưới xương sườn."
+                    },
+                    {
+                        question: "Phát biểu: Đối với trẻ rất non, việc bồi hoàn thể tích quá mức (hơn 40 mL/kg) bằng NaCl 0,9% có thể gây ra toan chuyển hóa do tăng chloride máu.",
+                        isTrue: true,
+                        rationale: "Sử dụng lượng lớn dung dịch chứa nhiều chloride gây nguy cơ toan chuyển hóa ở trẻ sinh non [18].",
+                        hint: "Chloride liều cao ảnh hưởng đến thăng bằng kiềm toan."
+                    },
+                    {
+                        question: "Phát biểu: Một trẻ tím tái kéo dài có bụng lõm hình thuyền và âm phế bào một bên giảm là dấu hiệu chỉ điểm quan trọng của thoát vị hoành bẩm sinh.",
+                        isTrue: true,
+                        rationale: "Thoát vị hoành chưa chẩn đoán trước sinh là một nguyên nhân hiếm gặp nhưng quan trọng gây tím tái kéo dài sau hồi sức [8].",
+                        hint: "Các tạng bụng di chuyển lên lồng ngực làm thay đổi hình dạng bụng."
+                    }
+                ]
+            },
+            13: {
+                title: "Chương 13: Yếu tố con người",
+                isAvailable: true,
+                questions: [
+                    {
+                        question: "Phát biểu: Các báo cáo y khoa cho thấy vấn đề giao tiếp thất bại là nguyên nhân của khoảng 80% các sự cố nghiêm trọng hoặc gần nghiêm trọng xảy ra tại bệnh viện. [1]",
+                        isTrue: true,
+                        rationale: "Giao tiếp kém khiến người hỗ trợ không nhận thức được mức độ khẩn cấp, dẫn đến các sai sót hệ thống nghiêm trọng. [1]",
+                        hint: "Con số này nhấn mạnh rằng kỹ năng phi kỹ thuật cũng quan trọng như kỹ năng đặt nội khí quản."
+                    },
+                    {
+                        question: "Phát biểu: Yếu tố con người trong lâm sàng chỉ đơn thuần là việc rèn luyện để cá nhân bác sĩ không mắc sai lầm khi thực hiện thủ thuật. [2]",
+                        isTrue: false,
+                        rationale: "Yếu tố con người bao gồm tác động của làm việc nhóm, nhiệm vụ, thiết bị, môi trường và văn hóa tổ chức lên hành vi và khả năng của con người. [2]",
+                        hint: "Hãy nghĩ về sự tác động của đội nhóm, thiết bị và văn hóa tổ chức."
+                    },
+                    {
+                        question: "Phát biểu: Một thảm họa trong hồi sức thường không bắt nguồn từ một lỗi đơn lẻ mà là sự cộng hưởng của nhiều lỗi nhỏ trong hệ thống. [3]",
+                        isTrue: true,
+                        rationale: "Các lỗi nhỏ (như thiết bị chưa chuẩn bị, gọi hỗ trợ chậm, nhân sự mới chưa thuộc đường) khi kết hợp lại sẽ gây ra hậu quả thảm khốc. [3, 4]",
+                        hint: "Khi các \"lỗ hổng\" trong các lát phomat xếp chồng lên nhau và xuyên suốt."
+                    },
+                    {
+                        question: "Phát biểu: Nhận định tình huống yêu cầu người bác sĩ phải tập trung tối đa vào một thủ thuật duy nhất (như đặt nội khí quản) cho đến khi thành công mới quan sát xung quanh. [5, 6]",
+                        isTrue: false,
+                        rationale: "Tập trung quá mức vào một nhiệm vụ mà bỏ qua bức tranh tổng thể gọi là \"làm việc theo quán tính\" (fixation error), điều này đối lập với nhận định tình huống đúng nghĩa. [6]",
+                        hint: "Điều gì xảy ra nếu bạn chỉ nhìn vào cái ống nội khí quản mà bỏ qua nhịp tim đang rời rạc?"
+                    },
+                    {
+                        question: "Phát biểu: Người lãnh đạo nhóm hồi sức bắt buộc phải là người có cấp bậc chuyên môn hoặc thâm niên cao nhất trong kíp trực tại thời điểm đó. [7]",
+                        isTrue: false,
+                        rationale: "Trưởng nhóm không nhất thiết là người có chuyên môn cao nhất, nhưng cả nhóm phải xác định rõ ai đang lãnh đạo và biết sự chuyển giao vai trò khi có người giỏi hơn đến hỗ trợ. [7]",
+                        hint: "Trưởng nhóm là người \"dẫn đường\", và vai trò này có thể được chuyển giao."
+                    },
+                    {
+                        question: "Phát biểu: Những thành viên có cấp bậc thấp trong nhóm nên hạn chế phát biểu ý kiến để tránh gây nhiễu thông tin cho người lãnh đạo đang tập trung xử trí. [2, 8]",
+                        isTrue: false,
+                        rationale: "Mọi thành viên, bất kể cấp bậc, đều phải cảm thấy mạnh dạn nêu lên những quan sát quan trọng hoặc lo ngại về an toàn của trẻ. [2, 8]",
+                        hint: "Liệu một sinh viên thực tập có thể nhận ra vạch oxy đã cạn trước bác sĩ chính không?"
+                    },
+                    {
+                        question: "Phát biểu: Trong ma trận năng lực, người \"Tự tin nhưng không có năng lực\" được xem là đối tượng tiềm ẩn nguy cơ gây mất an toàn nhất cho bệnh nhi. [9]",
+                        isTrue: true,
+                        rationale: "Tự tin vượt quá khả năng thực tế sẽ dẫn đến việc thực hiện thủ thuật sai cách mà không yêu cầu hỗ trợ, gây nguy hiểm tính mạng cho trẻ. [9]",
+                        hint: "Đây là người không biết rằng mình không biết."
+                    },
+                    {
+                        question: "Phát biểu: \"Bất đồng ý kiến\" (Disagreement) được hiểu là một cuộc tranh luận kịch liệt về quan điểm cá nhân khiến tiến trình hồi sức bị đình trệ. [10, 11]",
+                        isTrue: false,
+                        rationale: "Bất đồng ý kiến là sự khác biệt về phương án xử trí; lúc này trưởng nhóm cần quyết đoán đưa ra phương án thay thế để giảm thiểu chậm trễ. \"Tranh luận\" (Argument) mới là mức độ xung đột cao nhất gây đình trệ. [10, 11]",
+                        hint: "Hãy phân biệt giữa sự khác biệt về cách xử trí lâm sàng và sự xung đột về mục tiêu."
+                    },
+                    {
+                        question: "Phát biểu: Một vòng giao tiếp hoàn chỉnh là khi người thực hiện phản hồi xác nhận lệnh của trưởng nhóm trước khi tiến hành thủ thuật. [11]",
+                        isTrue: true,
+                        rationale: "Việc nhắc lại lệnh giúp đảm bảo thông tin được tiếp nhận chính xác và tránh nhầm lẫn trong môi trường ồn ào của phòng sinh. [11]",
+                        hint: "\"Tôi sẽ đánh giá lại nhịp tim sau 5 nhịp bóp bóng của bác sĩ\"."
+                    },
+                    {
+                        question: "Phát biểu: Để đạt đến điểm ổn định nhanh hơn, nhóm hồi sức nên thực hiện song song nhiều nhiệm vụ thay vì thực hiện tuần tự từng bước một. [12]",
+                        isTrue: true,
+                        rationale: "Làm việc đa nhiệm (Ủy quyền - Cộng tác - Phối hợp) giúp rút ngắn thời gian hồi sức đáng kể so với làm việc tuần tự. [12]",
+                        hint: "Một người gắn SpO2, một người giữ đường thở, một người chuẩn bị túi nilon."
+                    },
+                    {
+                        question: "Phát biểu: Theo bảng phân loại sai sót, \"Ngạo mạn\" được định nghĩa là sự tự tin vượt quá khả năng của bản thân dẫn đến bỏ qua các quy tắc an toàn. [13]",
+                        isTrue: true,
+                        rationale: "Sự ngạo mạn khiến cá nhân không thừa nhận hạn chế và không lắng nghe góp ý, dẫn đến sai sót lâm sàng. [13]",
+                        hint: "Một trong những rào cản tâm lý lớn nhất trong làm việc nhóm."
+                    },
+                    {
+                        question: "Phát biểu: Những bác sĩ làm việc tại các đơn vị ít bệnh nhân hoặc ít nguy cơ không cần diễn tập mô phỏng thường xuyên nếu họ đã có chứng chỉ NLS. [14]",
+                        isTrue: false,
+                        rationale: "Các kỹ năng sẽ bị mai một theo thời gian; những người ít thực hành lâm sàng bắt buộc phải tham gia diễn tập mô phỏng định kỳ để duy trì sự thành thạo. [14, 15]",
+                        hint: "Kỹ năng hồi sức có tồn tại mãi mãi nếu không được sử dụng?"
+                    },
+                    {
+                        question: "Phát biểu: Các buổi rút kinh nghiệm sau ca hồi sức nên được tổ chức ngay lập tức và tập trung vào việc phán xét các sai lầm cá nhân để kỷ luật. [15, 16]",
+                        isTrue: false,
+                        rationale: "Phản hồi nóng phải mang tính xây dựng, không phán xét, nhằm xác định vấn đề hệ thống và cải thiện quy trình cho tương lai. [16]",
+                        hint: "Mục tiêu của phản hồi là xây dựng hay trừng phạt?"
+                    },
+                    {
+                        question: "Phát biểu: Mục đích chính của sơ cứu tâm lý sau ca hồi sức là để ghi nhận những tổn thương tinh thần của nhân viên y tế và hỗ trợ đồng nghiệp kịp thời. [16]",
+                        isTrue: true,
+                        rationale: "Điều này thể hiện sự cảm thông và giúp bảo vệ sức khỏe tâm thần cho đội ngũ nhân viên y tế sau các tình huống căng thẳng cao độ. [16]",
+                        hint: "Một ca hồi sức thất bại có thể gây sang chấn cho cả kíp trực."
+                    },
+                    {
+                        question: "Phát biểu: Một nhà lãnh đạo giỏi chỉ cần đưa ra các mệnh lệnh quyết đoán mà không cần mất thời gian lắng nghe thông tin phản hồi từ các thành viên khác. [17]",
+                        isTrue: false,
+                        rationale: "Đặc điểm của nhà lãnh đạo giỏi là phải biết lắng nghe, chọn lọc thông tin và điều khiển vòng giao tiếp hiệu quả. [17]",
+                        hint: "Lắng nghe giúp trưởng nhóm có thêm dữ liệu để ra quyết định đúng."
+                    },
+                    {
+                        question: "Phát biểu: Việc áp dụng thường xuyên các kỹ năng đã học vào thực tế lâm sàng là trách nhiệm của cá nhân người học sau khi hoàn thành khóa NLS. [14]",
+                        isTrue: true,
+                        rationale: "Học viên sẽ mất hết kỹ năng nếu không áp dụng thường xuyên, bất kể họ đã từng đạt kết quả tốt thế nào trong khóa học. [15]",
+                        hint: "Chứng chỉ chỉ là điểm bắt đầu của hành trình năng lực."
+                    }
+                ]
+            }
+        };
+
+        // ================= APP STATE =================
+        let currentMode = "HOME"; // "HOME", "QUIZ", "RESULT"
+        let currentQuizType = null; // "CHAPTER_X" or "RANDOM_ALL"
+        let questions = []; 
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        // UI Elements
+        const ui = {
+            homeView: document.getElementById('homeView'),
+            quizArea: document.getElementById('quizArea'),
+            resultArea: document.getElementById('resultArea'),
+            chapterGrid: document.getElementById('chapterGrid'),
+            
+            quizTitleBadge: document.getElementById('quizTitleBadge'),
+            progressBar: document.getElementById('progressBar'),
+            questionCounter: document.getElementById('questionCounter'),
+            questionText: document.getElementById('questionText'),
+            
+            btnTrue: document.getElementById('btnTrue'),
+            btnFalse: document.getElementById('btnFalse'),
+            
+            feedbackArea: document.getElementById('feedbackArea'),
+            feedbackIcon: document.getElementById('feedbackIcon'),
+            feedbackTitle: document.getElementById('feedbackTitle'),
+            feedbackRationale: document.getElementById('feedbackRationale'),
+            feedbackHint: document.getElementById('feedbackHint'),
+            
+            btnNext: document.getElementById('btnNext'),
+            btnFinish: document.getElementById('btnFinish'),
+            btnRetrySame: document.getElementById('btnRetrySame'),
+            
+            resultSubtitle: document.getElementById('resultSubtitle'),
+            resultMessage: document.getElementById('resultMessage'),
+            chartContainer: document.getElementById('chartContainer'),
+            resultCircle: document.getElementById('resultCircle'),
+            chartPercentage: document.getElementById('chartPercentage'),
+            chartFraction: document.getElementById('chartFraction')
+        };
+
+        const icons = {
+            success: `<svg class="h-5 w-5 sm:h-6 sm:w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+            error: `<svg class="h-5 w-5 sm:h-6 sm:w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+            lock: `<svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>`
+        };
+
+        // ================= INITIALIZATION =================
+        function initApp() {
+            renderChapterButtons();
+            switchView("HOME");
+        }
+
+        function renderChapterButtons() {
+            let html = '';
+            for (let i = 1; i <= 13; i++) {
+                const chapter = allChaptersData[i];
+                if (chapter.isAvailable) {
+                    html += `
+                        <button onclick="startChapterTest(${i})" class="chapter-btn p-4 rounded-xl border border-gray-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-left flex flex-col justify-between h-full group">
+                            <span class="text-xs font-bold text-blue-600 mb-1 uppercase tracking-wider">Chương ${i}</span>
+                            <span class="text-sm font-medium text-gray-800 group-hover:text-blue-800 leading-tight">${chapter.title.replace(`Chương ${i}: `, '')}</span>
+                            <span class="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100 flex items-center justify-between w-full">
+                                <span>${chapter.questions.length} câu</span>
+                                <svg class="w-4 h-4 text-gray-300 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </span>
+                        </button>
+                    `;
+                } else {
+                    html += `
+                        <button disabled class="p-4 rounded-xl border border-gray-100 bg-gray-50 opacity-60 text-left flex flex-col justify-between h-full cursor-not-allowed">
+                            <span class="text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Chương ${i}</span>
+                            <span class="text-sm font-medium text-gray-500 leading-tight">${chapter.title.replace(`Chương ${i}: `, '')}</span>
+                            <span class="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100 flex items-center">
+                                ${icons.lock} Đang cập nhật
+                            </span>
+                        </button>
+                    `;
+                }
+            }
+            ui.chapterGrid.innerHTML = html;
+        }
+
+        function switchView(viewName) {
+            currentMode = viewName;
+            ui.homeView.classList.add('hidden');
+            ui.quizArea.classList.add('hidden');
+            ui.resultArea.classList.add('hidden');
+            
+            if (viewName === "HOME") {
+                ui.homeView.classList.remove('hidden');
+            } else if (viewName === "QUIZ") {
+                ui.quizArea.classList.remove('hidden');
+            } else if (viewName === "RESULT") {
+                ui.resultArea.classList.remove('hidden');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goHome() {
+            switchView("HOME");
+        }
+
+        // ================= QUIZ LOGIC =================
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function getAllAvailableQuestions() {
+            let allQ = [];
+            for (let i = 1; i <= 13; i++) {
+                if (allChaptersData[i].isAvailable) {
+                    allQ = allQ.concat(allChaptersData[i].questions);
+                }
+            }
+            return allQ;
+        }
+
+        function startChapterTest(chapterId) {
+            currentQuizType = `CHAPTER_${chapterId}`;
+            ui.quizTitleBadge.textContent = `CHƯƠNG ${chapterId}`;
+            ui.resultSubtitle.textContent = `Báo cáo Chương ${chapterId}`;
+            
+            questions = [...allChaptersData[chapterId].questions];
+            ui.btnRetrySame.classList.remove('hidden');
+            
+            initQuizSession();
+        }
+
+        function startRandomFullTest() {
+            currentQuizType = "RANDOM_ALL";
+            ui.quizTitleBadge.textContent = "BỘ ĐỀ TỔNG HỢP";
+            ui.resultSubtitle.textContent = "Báo cáo Bộ Đề Tổng Hợp (Random)";
+            
+            let allQ = getAllAvailableQuestions();
+            allQ = shuffleArray(allQ);
+            const numQuestions = Math.min(50, allQ.length);
+            questions = allQ.slice(0, numQuestions);
+            
+            ui.btnRetrySame.classList.add('hidden');
+            initQuizSession();
+        }
+
+        function restartQuiz(shuffle) {
+            if (currentQuizType === "RANDOM_ALL") {
+                startRandomFullTest(); 
+            } else {
+                const chapterId = parseInt(currentQuizType.split('_')[1]);
+                if (shuffle) {
+                    questions = shuffleArray([...allChaptersData[chapterId].questions]);
+                    ui.btnRetrySame.classList.add('hidden');
+                } else {
+                    questions = [...allChaptersData[chapterId].questions];
+                    ui.btnRetrySame.classList.remove('hidden');
+                }
+                initQuizSession();
+            }
+        }
+
+        function initQuizSession() {
+            currentQuestionIndex = 0;
+            score = 0;
+            switchView("QUIZ");
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            const q = questions[currentQuestionIndex];
+            
+            const progress = ((currentQuestionIndex) / questions.length) * 100;
+            ui.progressBar.style.width = `${progress}%`;
+            ui.questionCounter.textContent = `Câu ${currentQuestionIndex + 1} / ${questions.length}`;
+            
+            ui.questionText.innerHTML = q.question.replace('Phát biểu: ', '<span class="text-blue-600 font-bold">Phát biểu:</span><br>');
+            
+            ui.btnTrue.className = 'option-btn relative w-full py-3.5 sm:py-4 text-base sm:text-lg font-bold rounded-lg sm:rounded-xl border-2 border-gray-200 bg-white text-gray-700 hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-colors';
+            ui.btnFalse.className = 'option-btn relative w-full py-3.5 sm:py-4 text-base sm:text-lg font-bold rounded-lg sm:rounded-xl border-2 border-gray-200 bg-white text-gray-700 hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-colors';
+            ui.btnTrue.disabled = false;
+            ui.btnFalse.disabled = false;
+            
+            ui.feedbackArea.classList.add('hidden');
+            ui.btnNext.classList.add('hidden');
+            ui.btnFinish.classList.add('hidden');
+        }
+
+        function checkAnswer(userChoice) {
+            if (answered) return;
+            answered = true;
+            
+            const q = questions[currentQuestionIndex];
+            const isCorrect = (userChoice === q.isTrue);
+            if (isCorrect) score++;
+
+            ui.btnTrue.disabled = true;
+            ui.btnFalse.disabled = true;
+
+            const selectedBtn = userChoice ? ui.btnTrue : ui.btnFalse;
+            const correctBtn = q.isTrue ? ui.btnTrue : ui.btnFalse;
+            const wrongBtn = !q.isTrue ? ui.btnTrue : ui.btnFalse;
+
+            correctBtn.className = 'w-full py-3.5 sm:py-4 text-base sm:text-lg font-bold rounded-lg sm:rounded-xl border-2 transition-colors border-green-500 bg-green-50 text-green-700';
+            wrongBtn.className = 'w-full py-3.5 sm:py-4 text-base sm:text-lg font-bold rounded-lg sm:rounded-xl border-2 transition-colors border-gray-200 bg-gray-50 text-gray-400 opacity-60';
+
+            if (isCorrect) {
+                selectedBtn.classList.add('correct-anim');
+            } else {
+                selectedBtn.className = 'w-full py-3.5 sm:py-4 text-base sm:text-lg font-bold rounded-lg sm:rounded-xl border-2 transition-colors border-red-500 bg-red-50 text-red-700 wrong-anim';
+            }
+
+            showFeedback(isCorrect, q);
+        }
+
+        function showFeedback(isCorrect, q) {
+            ui.feedbackArea.classList.remove('hidden', 'border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50');
+            
+            if (isCorrect) {
+                ui.feedbackArea.classList.add('border-green-500', 'bg-green-50');
+                ui.feedbackIcon.innerHTML = icons.success;
+                ui.feedbackTitle.textContent = "Chính xác!";
+                ui.feedbackTitle.className = "text-base sm:text-lg font-bold mb-1 text-green-800";
+            } else {
+                ui.feedbackArea.classList.add('border-red-500', 'bg-red-50');
+                ui.feedbackIcon.innerHTML = icons.error;
+                ui.feedbackTitle.textContent = "Chưa chính xác!";
+                ui.feedbackTitle.className = "text-base sm:text-lg font-bold mb-1 text-red-800";
+            }
+
+            ui.feedbackRationale.textContent = q.rationale;
+            ui.feedbackHint.textContent = q.hint;
+
+            if (currentQuestionIndex < questions.length - 1) {
+                ui.btnNext.classList.remove('hidden');
+            } else {
+                ui.btnFinish.classList.remove('hidden');
+                ui.progressBar.style.width = '100%';
+            }
+            
+            setTimeout(() => {
+                const nextBtn = currentQuestionIndex < questions.length - 1 ? ui.btnNext : ui.btnFinish;
+                nextBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        function showResults() {
+            switchView("RESULT");
+            
+            const total = questions.length;
+            const percentage = Math.round((score / total) * 100);
+            
+            ui.chartPercentage.textContent = `${percentage}%`;
+            ui.chartFraction.textContent = `${score} / ${total}`;
+            
+            ui.resultCircle.style.strokeDasharray = `${percentage}, 100`;
+            
+            ui.chartContainer.querySelector('svg').className.baseVal = "circular-chart";
+            let message = "";
+            
+            if (percentage === 100) {
+                ui.chartContainer.querySelector('svg').classList.add('score-excellent');
+                message = "Xuất sắc! Bạn đã nắm vững hoàn toàn các nguyên lý. Bạn đã sẵn sàng xử lý các tình huống cấp cứu!";
+                ui.resultMessage.className = "text-base sm:text-lg font-medium text-green-700 mb-8 px-2 sm:px-4 leading-relaxed";
+            } else if (percentage >= 70) {
+                ui.chartContainer.querySelector('svg').classList.add('score-good');
+                message = "Khá tốt! Bạn đã có phản xạ lâm sàng cơ bản. Hãy xem lại kỹ phần giải thích của những câu sai để củng cố kiến thức.";
+                ui.resultMessage.className = "text-base sm:text-lg font-medium text-blue-700 mb-8 px-2 sm:px-4 leading-relaxed";
+            } else {
+                ui.chartContainer.querySelector('svg').classList.add('score-poor');
+                message = "Bạn cần ôn tập lại. Hồi sức sơ sinh đòi hỏi độ chính xác tuyệt đối trong các nguyên lý nền tảng.";
+                ui.resultMessage.className = "text-base sm:text-lg font-medium text-red-600 mb-8 px-2 sm:px-4 leading-relaxed";
+            }
+            ui.resultMessage.textContent = message;
+        }
+
+        // Khởi động
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
