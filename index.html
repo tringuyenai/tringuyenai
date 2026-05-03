@@ -88,21 +88,31 @@
                 <p class="text-base sm:text-lg text-gray-600">Khóa Hồi Sức Sau Sinh (Newborn Life Support)</p>
             </header>
 
-            <div class="mb-8 flex flex-col gap-4">
-                <button onclick="startRandomFullTest()" class="w-full py-4 sm:py-5 px-6 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-lg sm:text-xl font-bold rounded-xl shadow-lg transform transition-all hover:-translate-y-1 hover:shadow-xl flex items-center justify-center gap-3">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                    BỘ ĐỀ TỔNG HỢP (50 Câu Ngẫu Nhiên)
+            <div class="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <button onclick="startRandomFullTest()" class="w-full py-4 sm:py-5 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-base sm:text-lg font-bold rounded-xl shadow-lg transform transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col items-center justify-center gap-2">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                    <span class="text-center">BỘ ĐỀ TỔNG HỢP</span>
                 </button>
                 
-                <button onclick="openInfographicList()" class="w-full py-4 sm:py-5 px-6 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white text-lg sm:text-xl font-bold rounded-xl shadow-lg transform transition-all hover:-translate-y-1 hover:shadow-xl flex items-center justify-center gap-3">
-                    <svg class="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    INFOGRAPHIC 13 CHƯƠNG
+                <button onclick="openDocumentList('THEORY')" class="w-full py-4 sm:py-5 px-4 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white text-base sm:text-lg font-bold rounded-xl shadow-lg transform transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col items-center justify-center gap-2">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span class="text-center">INFOGRAPHIC</span>
+                </button>
+                
+                <button onclick="openDocumentList('SKILL')" class="w-full py-4 sm:py-5 px-4 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white text-base sm:text-lg font-bold rounded-xl shadow-lg transform transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col items-center justify-center gap-2">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    <span class="text-center">KỸ NĂNG</span>
+                </button>
+                
+                <button onclick="openDocumentList('APPENDIX')" class="w-full py-4 sm:py-5 px-4 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white text-base sm:text-lg font-bold rounded-xl shadow-lg transform transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col items-center justify-center gap-2">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span class="text-center">PHỤ LỤC</span>
                 </button>
             </div>
 
             <div class="relative flex py-5 items-center">
                 <div class="flex-grow border-t border-gray-300"></div>
-                <span class="flex-shrink-0 mx-4 text-gray-500 font-medium">Hoặc chọn ôn theo từng chương</span>
+                <span class="flex-shrink-0 mx-4 text-gray-500 font-medium">Hoặc chọn ôn theo từng phần</span>
                 <div class="flex-grow border-t border-gray-300"></div>
             </div>
 
@@ -111,40 +121,40 @@
             </div>
         </div>
 
-        <!-- ==================== INFOGRAPHIC LIST VIEW ==================== -->
-        <div id="infographicListView" class="hidden app-view bg-white rounded-xl md:rounded-2xl shadow-lg md:shadow-xl overflow-hidden">
+        <!-- ==================== DOCUMENT LIST VIEW ==================== -->
+        <div id="documentListView" class="hidden app-view bg-white rounded-xl md:rounded-2xl shadow-lg md:shadow-xl overflow-hidden">
             <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center">
                 <button onclick="goHome()" class="text-gray-600 hover:text-teal-600 font-medium flex items-center gap-1 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                     Trang chủ
                 </button>
-                <span class="mx-auto text-teal-800 text-sm font-bold px-3 py-1 uppercase tracking-wide">Thư Viện Infographic</span>
+                <span id="documentListHeaderBadge" class="mx-auto text-teal-800 text-sm font-bold px-3 py-1 uppercase tracking-wide">Thư Viện Tài Liệu</span>
             </div>
             
             <div class="p-4 sm:p-8">
-                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6 text-center">Chọn chương để xem Infographic</h2>
-                <div id="infographicGrid" class="chapter-grid">
-                    <!-- Buttons will be generated by JS -->
+                <h2 id="documentListTitle" class="text-xl sm:text-2xl font-bold text-gray-800 mb-6 text-center">Chọn tài liệu để xem chi tiết</h2>
+                <div id="documentGrid" class="chapter-grid">
+                    <!-- Buttons will be generated dynamically by JS -->
                 </div>
             </div>
         </div>
 
-        <!-- ==================== INFOGRAPHIC DETAIL VIEW ==================== -->
-        <div id="infographicDetailView" class="hidden app-view bg-white rounded-xl md:rounded-2xl shadow-lg md:shadow-xl overflow-hidden">
+        <!-- ==================== DOCUMENT DETAIL VIEW ==================== -->
+        <div id="documentDetailView" class="hidden app-view bg-white rounded-xl md:rounded-2xl shadow-lg md:shadow-xl overflow-hidden">
             <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-                <button onclick="openInfographicList()" class="text-gray-600 hover:text-teal-600 font-medium flex items-center gap-1 transition-colors">
+                <button id="detailBackBtn" class="text-gray-600 hover:text-teal-600 font-medium flex items-center gap-1 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    Trở lại danh sách
+                    <span>Trở lại danh sách</span>
                 </button>
-                <span id="infographicTitleBadge" class="bg-teal-100 text-teal-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Chương X</span>
+                <span id="documentTitleBadge" class="bg-teal-100 text-teal-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide"></span>
             </div>
             
             <div class="p-4 sm:p-8 flex flex-col items-center justify-center min-h-[50vh]">
-                <h2 id="infographicTitle" class="text-xl sm:text-2xl font-bold text-gray-800 mb-6 text-center">Tiêu đề chương</h2>
+                <h2 id="documentTitle" class="text-xl sm:text-2xl font-bold text-gray-800 mb-6 text-center">Tiêu đề tài liệu</h2>
                 
                 <!-- Container for the image -->
                 <div class="w-full max-w-4xl rounded-lg shadow-sm border border-gray-200 overflow-hidden bg-gray-50">
-                    <img id="infographicImage" src="" alt="Infographic" class="w-full h-auto object-contain">
+                    <img id="documentImage" src="" alt="Tài liệu ảnh" class="w-full h-auto object-contain">
                 </div>
             </div>
         </div>
@@ -240,7 +250,8 @@
     </div>
 
     <script>
-        // ================= DATABASE =================
+        // ================= DATABASE CHO TRẮC NGHIỆM =================
+        // Chỉ lưu 13 chương để phục vụ làm quiz (không nhồi nhét tài liệu vào đây nữa)
         const allChaptersData = {
             1: {
                 title: "Chương 1: Giới thiệu khóa NLS",
@@ -598,8 +609,9 @@
         };
 
         // ================= APP STATE =================
-        let currentMode = "HOME"; // "HOME", "QUIZ", "RESULT", "INFOGRAPHIC_LIST", "INFOGRAPHIC_DETAIL"
+        let currentMode = "HOME"; // "HOME", "QUIZ", "RESULT", "DOCUMENT_LIST", "DOCUMENT_DETAIL"
         let currentQuizType = null; 
+        let currentDocumentCategory = null;
         let questions = []; 
         let currentQuestionIndex = 0;
         let score = 0;
@@ -610,19 +622,20 @@
             homeView: document.getElementById('homeView'),
             quizArea: document.getElementById('quizArea'),
             resultArea: document.getElementById('resultArea'),
-            infographicListView: document.getElementById('infographicListView'),
-            infographicDetailView: document.getElementById('infographicDetailView'),
+            documentListView: document.getElementById('documentListView'),
+            documentDetailView: document.getElementById('documentDetailView'),
+            
             chapterGrid: document.getElementById('chapterGrid'),
-            infographicGrid: document.getElementById('infographicGrid'),
+            documentGrid: document.getElementById('documentGrid'),
             
             quizTitleBadge: document.getElementById('quizTitleBadge'),
             progressBar: document.getElementById('progressBar'),
             questionCounter: document.getElementById('questionCounter'),
             questionText: document.getElementById('questionText'),
             
-            infographicTitleBadge: document.getElementById('infographicTitleBadge'),
-            infographicTitle: document.getElementById('infographicTitle'),
-            infographicImage: document.getElementById('infographicImage'),
+            documentTitleBadge: document.getElementById('documentTitleBadge'),
+            documentTitle: document.getElementById('documentTitle'),
+            documentImage: document.getElementById('documentImage'),
             
             btnTrue: document.getElementById('btnTrue'),
             btnFalse: document.getElementById('btnFalse'),
@@ -653,43 +666,35 @@
 
         // ================= INITIALIZATION =================
         function initApp() {
-            renderChapterButtons();
+            renderChapterButtons(); // Render quiz grid
             switchView("HOME");
         }
 
         function renderChapterButtons() {
             let htmlQuiz = '';
-            let htmlInfo = '';
-            for (let i = 1; i <= 13; i++) {
+            const chapterIds = Object.keys(allChaptersData).map(Number).sort((a,b) => a-b);
+
+            for (const i of chapterIds) {
                 const chapter = allChaptersData[i];
-                if (chapter.isAvailable) {
-                    // HTML for Home Quiz buttons
+                const badgeText = `Chương ${i}`;
+                const titleText = chapter.title.replace(`Chương ${i}: `, '');
+
+                if (chapter.isAvailable && chapter.questions && chapter.questions.length > 0) {
                     htmlQuiz += `
                         <button onclick="startChapterTest(${i})" class="chapter-btn p-4 rounded-xl border border-gray-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-left flex flex-col justify-between h-full group">
-                            <span class="text-xs font-bold text-blue-600 mb-1 uppercase tracking-wider">Chương ${i}</span>
-                            <span class="text-sm font-medium text-gray-800 group-hover:text-blue-800 leading-tight">${chapter.title.replace(`Chương ${i}: `, '')}</span>
+                            <span class="text-xs font-bold text-blue-600 mb-1 uppercase tracking-wider">${badgeText}</span>
+                            <span class="text-sm font-medium text-gray-800 group-hover:text-blue-800 leading-tight">${titleText}</span>
                             <span class="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100 flex items-center justify-between w-full">
                                 <span>${chapter.questions.length} câu</span>
                                 <svg class="w-4 h-4 text-gray-300 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                             </span>
                         </button>
                     `;
-                    // HTML for Infographic List buttons
-                    htmlInfo += `
-                        <button onclick="showInfographic(${i})" class="chapter-btn p-4 rounded-xl border border-gray-200 bg-white hover:border-teal-400 hover:bg-teal-50 text-left flex flex-col justify-between h-full group">
-                            <span class="text-xs font-bold text-teal-600 mb-1 uppercase tracking-wider">Chương ${i}</span>
-                            <span class="text-sm font-medium text-gray-800 group-hover:text-teal-800 leading-tight">${chapter.title.replace(`Chương ${i}: `, '')}</span>
-                            <span class="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100 flex items-center justify-between w-full">
-                                <span>Xem ảnh</span>
-                                <svg class="w-4 h-4 text-gray-300 group-hover:text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            </span>
-                        </button>
-                    `;
                 } else {
                     htmlQuiz += `
                         <button disabled class="p-4 rounded-xl border border-gray-100 bg-gray-50 opacity-60 text-left flex flex-col justify-between h-full cursor-not-allowed">
-                            <span class="text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Chương ${i}</span>
-                            <span class="text-sm font-medium text-gray-500 leading-tight">${chapter.title.replace(`Chương ${i}: `, '')}</span>
+                            <span class="text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">${badgeText}</span>
+                            <span class="text-sm font-medium text-gray-500 leading-tight">${titleText}</span>
                             <span class="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100 flex items-center">
                                 ${icons.lock} Đang cập nhật
                             </span>
@@ -698,7 +703,6 @@
                 }
             }
             ui.chapterGrid.innerHTML = htmlQuiz;
-            ui.infographicGrid.innerHTML = htmlInfo;
         }
 
         function switchView(viewName) {
@@ -706,8 +710,8 @@
             ui.homeView.classList.add('hidden');
             ui.quizArea.classList.add('hidden');
             ui.resultArea.classList.add('hidden');
-            ui.infographicListView.classList.add('hidden');
-            ui.infographicDetailView.classList.add('hidden');
+            ui.documentListView.classList.add('hidden');
+            ui.documentDetailView.classList.add('hidden');
             
             if (viewName === "HOME") {
                 ui.homeView.classList.remove('hidden');
@@ -715,10 +719,10 @@
                 ui.quizArea.classList.remove('hidden');
             } else if (viewName === "RESULT") {
                 ui.resultArea.classList.remove('hidden');
-            } else if (viewName === "INFOGRAPHIC_LIST") {
-                ui.infographicListView.classList.remove('hidden');
-            } else if (viewName === "INFOGRAPHIC_DETAIL") {
-                ui.infographicDetailView.classList.remove('hidden');
+            } else if (viewName === "DOCUMENT_LIST") {
+                ui.documentListView.classList.remove('hidden');
+            } else if (viewName === "DOCUMENT_DETAIL") {
+                ui.documentDetailView.classList.remove('hidden');
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -727,48 +731,91 @@
             switchView("HOME");
         }
 
-        // ================= INFOGRAPHIC LOGIC =================
-        function openInfographicList() {
-            switchView("INFOGRAPHIC_LIST");
+        // ================= DOCUMENT LOGIC =================
+        function openDocumentList(category) {
+            currentDocumentCategory = category;
+            switchView("DOCUMENT_LIST");
+            
+            const listHeaderBadge = document.getElementById('documentListHeaderBadge');
+            const listTitle = document.getElementById('documentListTitle');
+            let html = '';
+            
+            if (category === 'THEORY') {
+                listHeaderBadge.textContent = "THƯ VIỆN LÝ THUYẾT";
+                listTitle.textContent = "Chọn Infographic Lý Thuyết";
+                // Lấy 13 chương từ cơ sở dữ liệu để vẽ nút
+                for (let i = 1; i <= 13; i++) {
+                    const titleText = allChaptersData[i].title.replace(`Chương ${i}: `, '');
+                    const imgName = `Chương ${i}.jpg`;
+                    html += createDocumentButton(category, `Chương ${i}`, titleText, imgName);
+                }
+            } else if (category === 'SKILL') {
+                listHeaderBadge.textContent = "THƯ VIỆN KỸ NĂNG";
+                listTitle.textContent = "Chọn Infographic Kỹ Năng";
+                // Lấy 13 chương kỹ năng (Tên chương mượn từ cơ sở dữ liệu)
+                for (let i = 1; i <= 13; i++) {
+                    const titleText = allChaptersData[i].title.replace(`Chương ${i}: `, '');
+                    const imgName = `Kỹ Năng Chương ${i}.jpg`;
+                    html += createDocumentButton(category, `Kỹ Năng ${i}`, titleText, imgName);
+                }
+            } else if (category === 'APPENDIX') {
+                listHeaderBadge.textContent = "THƯ VIỆN PHỤ LỤC";
+                listTitle.textContent = "Chọn Phụ Lục";
+                // 3 phụ lục tùy chỉnh
+                const appendices = [
+                    { id: 'A', title: 'Thuốc & Dịch truyền' },
+                    { id: 'B', title: 'Lưu đồ thuật toán NLS' },
+                    { id: 'C', title: 'Bảng kiểm thiết bị & Kỹ năng' }
+                ];
+                for (const app of appendices) {
+                    const imgName = `Phụ Lục ${app.id}.jpg`;
+                    html += createDocumentButton(category, `Phụ Lục ${app.id}`, app.title, imgName);
+                }
+            }
+            
+            ui.documentGrid.innerHTML = html;
         }
 
-        function showInfographic(chapterId) {
-            const chapter = allChaptersData[chapterId];
-            ui.infographicTitleBadge.textContent = `Chương ${chapterId}`;
-            ui.infographicTitle.textContent = chapter.title.replace(`Chương ${chapterId}: `, '');
+        function createDocumentButton(category, badgeText, titleText, imgName) {
+            // Encode strings safely for HTML attribute
+            const safeBadge = badgeText.replace(/'/g, "\\'");
+            const safeTitle = titleText.replace(/'/g, "\\'");
+            const safeImg = imgName.replace(/'/g, "\\'");
             
-            // Map đường dẫn ảnh tương ứng với tên file từ Chương 1 đến Chương 13
-            const imgUrls = {
-                1: 'Chương 1.jpg',
-                2: 'Chương 2.jpg',
-                3: 'Chương 3.jpg',
-                4: 'Chương 4.jpg',
-                5: 'Chương 5.jpg',
-                6: 'Chương 6.jpg',
-                7: 'Chương 7.jpg',
-                8: 'Chương 8.jpg',
-                9: 'Chương 9.jpg',
-                10: 'Chương 10.jpg',
-                11: 'Chương 11.jpg',
-                12: 'Chương 12.jpg',
-                13: 'Chương 13.jpg'
-            };
+            // Đổi màu hover tùy theo nhóm cho đẹp mắt
+            let colorClasses = "hover:border-teal-400 hover:bg-teal-50 text-teal-600 group-hover:text-teal-800";
+            if(category === 'SKILL') colorClasses = "hover:border-orange-400 hover:bg-orange-50 text-orange-600 group-hover:text-orange-800";
+            if(category === 'APPENDIX') colorClasses = "hover:border-purple-400 hover:bg-purple-50 text-purple-600 group-hover:text-purple-800";
+            
+            return `
+                <button onclick="showDocumentDetail('${safeBadge}', '${safeTitle}', '${safeImg}')" class="chapter-btn p-4 rounded-xl border border-gray-200 bg-white ${colorClasses.split(' ')[0]} ${colorClasses.split(' ')[1]} text-left flex flex-col justify-between h-full group">
+                    <span class="text-xs font-bold ${colorClasses.split(' ')[2]} mb-1 uppercase tracking-wider">${badgeText}</span>
+                    <span class="text-sm font-medium text-gray-800 ${colorClasses.split(' ')[3]} leading-tight">${titleText}</span>
+                    <span class="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100 flex items-center justify-between w-full">
+                        <span>Xem ảnh</span>
+                        <svg class="w-4 h-4 text-gray-300 group-hover:currentColor" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </span>
+                </button>
+            `;
+        }
 
-            if (imgUrls[chapterId]) {
-                // encodeURI giúp xử lý tên file có tiếng Việt có dấu và khoảng trắng
-                ui.infographicImage.src = encodeURI(imgUrls[chapterId]);
-            } else {
-                // Fallback placeholder (dù bây giờ map đã có đủ 13 chương)
-                ui.infographicImage.src = `https://placehold.co/800x1200/e2e8f0/0f766e?text=Infographic+Chương+${chapterId}`;
-            }
-
-            // Phòng trường hợp file ảnh thật bị thiếu hoặc đường dẫn sai khi chạy, đổi sang ảnh placeholder báo lỗi nhẹ
-            ui.infographicImage.onerror = function() {
+        function showDocumentDetail(badgeText, titleText, imgName) {
+            ui.documentTitleBadge.textContent = badgeText;
+            ui.documentTitle.textContent = titleText;
+            
+            // Xử lý logic tên file & phòng ngừa lỗi
+            ui.documentImage.src = encodeURI(imgName);
+            
+            ui.documentImage.onerror = function() {
                 this.onerror = null; // Tránh loop vô hạn
-                this.src = `https://placehold.co/800x1200/f87171/ffffff?text=Chưa+Tìm+Thấy+Ảnh+Chương+${chapterId}`;
+                const errText = `Chưa+Tìm+Thấy+Ảnh+${encodeURIComponent(imgName)}`;
+                this.src = `https://placehold.co/800x1200/f87171/ffffff?text=${errText}`;
             };
+
+            const backBtn = document.getElementById('detailBackBtn');
+            backBtn.onclick = () => openDocumentList(currentDocumentCategory);
             
-            switchView("INFOGRAPHIC_DETAIL");
+            switchView("DOCUMENT_DETAIL");
         }
 
         // ================= QUIZ LOGIC =================
@@ -783,11 +830,11 @@
 
         function getAllAvailableQuestions() {
             let allQ = [];
-            for (let i = 1; i <= 13; i++) {
-                if (allChaptersData[i].isAvailable) {
-                    allQ = allQ.concat(allChaptersData[i].questions);
+            Object.values(allChaptersData).forEach(chapter => {
+                if (chapter.isAvailable && chapter.questions && chapter.questions.length > 0) {
+                    allQ = allQ.concat(chapter.questions);
                 }
-            }
+            });
             return allQ;
         }
 
