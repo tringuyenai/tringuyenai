@@ -72,6 +72,75 @@
                 grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             }
         }
+
+        /* Tùy chỉnh thanh cuộn cho Game Map */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #e0e7ff; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #818cf8; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #6366f1; 
+        }
+
+        /* ================= GAME 1 CSS (iOS Edition) ================= */
+        #mg1-dynamic-bg {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(56, 189, 248, 0.15) 0%, rgba(0, 0, 0, 1) 70%);
+            transition: background 1.5s ease; z-index: 0; border-radius: inherit;
+        }
+        #mg1-damage-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            box-shadow: inset 0 0 100px rgba(255, 59, 48, 0); pointer-events: none; z-index: 50;
+            transition: box-shadow 0.3s ease; border-radius: inherit;
+        }
+        .mg1-flash-damage { box-shadow: inset 0 0 120px rgba(255, 59, 48, 0.8) !important; transition: none !important; }
+        #mg1-app { 
+            position: relative; z-index: 10;
+            width: 100%; display: flex; flex-direction: column; height: 100%;
+        }
+        .mg1-glass-panel { 
+            background: rgba(30, 41, 59, 0.4); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 1.5rem; 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .mg1-timer-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+        #mg1-timer-bar { height: 100%; width: 100%; background: #38bdf8; transition: width 1s linear, background-color 0.5s ease; }
+        .mg1-time-penalty { animation: mg1ShakeTime 0.4s ease; color: #ff453a !important; }
+        @keyframes mg1ShakeTime { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .mg1-beat-normal { animation: mg1Heartbeat 1s infinite; }
+        .mg1-beat-slow { animation: mg1Heartbeat 1.5s infinite; filter: drop-shadow(0 0 10px rgba(175, 82, 222, 0.5)); }
+        .mg1-beat-fast { animation: mg1Heartbeat 0.5s infinite; filter: drop-shadow(0 0 15px rgba(255, 45, 85, 0.6)); }
+        .mg1-beat-stop { animation: none; filter: grayscale(100%); opacity: 0.7; }
+        .mg1-beat-pale { animation: mg1Heartbeat 2.5s infinite; filter: grayscale(80%) opacity(0.8); }
+        @keyframes mg1Heartbeat { 0% { transform: scale(1); } 15% { transform: scale(1.08); } 30% { transform: scale(1); } 45% { transform: scale(1.08); } 60% { transform: scale(1); } }
+        .mg1-emoji-center { font-size: 4.5rem; text-shadow: 0 10px 20px rgba(0,0,0,0.5); transition: all 1s ease; user-select: none; }
+        .mg1-skin-cyanosis { filter: hue-rotate(180deg) saturate(80%) brightness(80%); }
+        .mg1-skin-pale { filter: grayscale(100%) brightness(120%) opacity(0.85); }
+        .mg1-skin-dead { filter: grayscale(100%) brightness(60%); transform: scale(0.95); }
+        .mg1-bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 1rem; margin-bottom: 1rem; }
+        .mg1-bento-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 1rem; padding: 0.75rem; display: flex; flex-direction: column; justify-content: space-between; }
+        #mg1-log-panel { flex-grow: 1; overflow-y: scroll; padding: 1rem 0.5rem; scroll-behavior: smooth; }
+        #mg1-log-panel::-webkit-scrollbar { display: none; }
+        .mg1-fade-in { animation: mg1FadeInUp 0.5s ease forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes mg1FadeInUp { to { opacity: 1; transform: translateY(0); } }
+        .mg1-btn { 
+            width: 100%; text-align: left; padding: 1rem 1.25rem; margin-bottom: 0.5rem; 
+            background: rgba(255, 255, 255, 0.08); 
+            border: 1px solid rgba(255, 255, 255, 0.15); 
+            border-radius: 1.25rem; color: #fff; font-size: 0.95rem; font-weight: 500; 
+            line-height: 1.4; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer;
+        }
+        .mg1-btn:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); }
+        .mg1-btn-highlight { color: #32d74b; font-weight: 600; }
     </style>
 </head>
 <body class="min-h-screen text-gray-800 p-2 sm:p-4 md:p-8 flex items-start sm:items-center justify-center">
@@ -108,6 +177,12 @@
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     <span class="text-center">PHỤ LỤC</span>
                 </button>
+
+                <!-- NÚT GAME -->
+                <button onclick="openGameMap()" class="w-full sm:col-span-2 py-4 sm:py-5 px-4 bg-gradient-to-r from-violet-500 to-fuchsia-600 hover:from-violet-600 hover:to-fuchsia-700 text-white text-base sm:text-lg font-bold rounded-xl shadow-lg transform transition-all hover:-translate-y-1 hover:shadow-xl flex flex-col items-center justify-center gap-2">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-center">GAME: HÀNH TRÌNH CẤP CỨU</span>
+                </button>
             </div>
 
             <div class="relative flex py-5 items-center">
@@ -118,6 +193,144 @@
 
             <div id="chapterGrid" class="chapter-grid mt-6">
                 <!-- Buttons will be generated by JS -->
+            </div>
+        </div>
+
+        <!-- ==================== GAME MAP VIEW ==================== -->
+        <div id="gameArea" class="hidden app-view bg-white rounded-xl md:rounded-2xl shadow-lg md:shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+                <button onclick="goHome()" class="text-gray-600 hover:text-violet-600 font-medium flex items-center gap-1 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    Trang chủ
+                </button>
+                <span class="bg-violet-100 text-violet-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Bản Đồ Thử Thách</span>
+            </div>
+
+            <div class="p-4 sm:p-6 md:p-10 text-center bg-white min-h-[50vh] flex flex-col justify-center">
+                <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-2">Thử Thách Đi Cảnh</h2>
+                <p class="text-gray-500 mb-10 text-sm sm:text-base">Vượt qua 6 trạm để chứng minh kỹ năng của bạn!</p>
+
+                <!-- Map Container -->
+                <div class="w-full overflow-x-auto custom-scrollbar pb-10 pt-8 rounded-xl bg-sky-50 shadow-inner border border-sky-100 relative">
+                    <div class="flex items-center min-w-[750px] relative h-32 px-10 mx-auto w-max" id="gameTrack">
+                        
+                        <!-- Đường dẫn (Path line) -->
+                        <div class="absolute left-10 right-10 top-1/2 h-3 bg-white border-2 border-sky-200 rounded-full -translate-y-1/2 z-0"></div>
+
+                        <!-- 6 Điểm chơi (Nodes) -->
+                        <div class="relative z-10 flex justify-between w-full">
+                            <div class="flex flex-col items-center group cursor-pointer relative" onclick="openMinigame(1)">
+                                <div id="gameNode1" class="w-12 h-12 rounded-full bg-white border-4 border-violet-500 flex items-center justify-center text-violet-600 font-bold shadow-md transition-transform group-hover:scale-110 group-hover:bg-violet-50">1</div>
+                                <span class="absolute top-14 text-xs font-semibold text-gray-600 whitespace-nowrap">Trạm 1</span>
+                            </div>
+                            <div class="flex flex-col items-center group cursor-pointer relative" onclick="openMinigame(2)">
+                                <div id="gameNode2" class="w-12 h-12 rounded-full bg-white border-4 border-violet-500 flex items-center justify-center text-violet-600 font-bold shadow-md transition-transform group-hover:scale-110 group-hover:bg-violet-50">2</div>
+                                <span class="absolute top-14 text-xs font-semibold text-gray-600 whitespace-nowrap">Trạm 2</span>
+                            </div>
+                            <div class="flex flex-col items-center group cursor-pointer relative" onclick="openMinigame(3)">
+                                <div id="gameNode3" class="w-12 h-12 rounded-full bg-white border-4 border-violet-500 flex items-center justify-center text-violet-600 font-bold shadow-md transition-transform group-hover:scale-110 group-hover:bg-violet-50">3</div>
+                                <span class="absolute top-14 text-xs font-semibold text-gray-600 whitespace-nowrap">Trạm 3</span>
+                            </div>
+                            <div class="flex flex-col items-center group cursor-pointer relative" onclick="openMinigame(4)">
+                                <div id="gameNode4" class="w-12 h-12 rounded-full bg-white border-4 border-violet-500 flex items-center justify-center text-violet-600 font-bold shadow-md transition-transform group-hover:scale-110 group-hover:bg-violet-50">4</div>
+                                <span class="absolute top-14 text-xs font-semibold text-gray-600 whitespace-nowrap">Trạm 4</span>
+                            </div>
+                            <div class="flex flex-col items-center group cursor-pointer relative" onclick="openMinigame(5)">
+                                <div id="gameNode5" class="w-12 h-12 rounded-full bg-white border-4 border-violet-500 flex items-center justify-center text-violet-600 font-bold shadow-md transition-transform group-hover:scale-110 group-hover:bg-violet-50">5</div>
+                                <span class="absolute top-14 text-xs font-semibold text-gray-600 whitespace-nowrap">Trạm 5</span>
+                            </div>
+                            <div class="flex flex-col items-center group cursor-pointer relative" onclick="openMinigame(6)">
+                                <div id="gameNode6" class="w-12 h-12 rounded-full bg-white border-4 border-violet-500 flex items-center justify-center text-violet-600 font-bold shadow-md transition-transform group-hover:scale-110 group-hover:bg-violet-50">6</div>
+                                <span class="absolute top-14 text-xs font-semibold text-gray-600 whitespace-nowrap">Trạm 6</span>
+                            </div>
+                        </div>
+
+                        <!-- Nhân vật Bác sĩ -->
+                        <div id="doctorCharacter" class="absolute top-1/2 -mt-10 z-20 transition-transform duration-700 ease-in-out pointer-events-none" style="left: 0; transform: translateX(0px) translateY(-50%);">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-16 h-16 drop-shadow-lg filter drop-shadow-md">
+                                <path d="M 30 100 L 30 60 Q 50 40 70 60 L 70 100 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+                                <path d="M 40 60 L 60 60 L 50 80 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+                                <rect x="48" y="60" width="4" height="40" fill="#cbd5e1"/>
+                                <rect x="46" y="68" width="8" height="2" fill="#ef4444"/>
+                                <rect x="49" y="65" width="2" height="8" fill="#ef4444"/>
+                                <circle cx="50" cy="35" r="20" fill="#fde68a" stroke="#fbbf24" stroke-width="2"/>
+                                <path d="M 35 55 Q 50 75 65 55" fill="none" stroke="#475569" stroke-width="3"/>
+                                <path d="M 65 55 L 65 75" fill="none" stroke="#475569" stroke-width="2"/>
+                                <circle cx="65" cy="78" r="3" fill="#475569"/>
+                                <circle cx="43" cy="32" r="2" fill="#1e293b"/>
+                                <circle cx="57" cy="32" r="2" fill="#1e293b"/>
+                                <path d="M 45 42 Q 50 46 55 42" fill="none" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M 28 30 Q 50 5 72 30 Q 75 20 50 15 Q 25 20 28 30 Z" fill="#0ea5e9"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== MINIGAME 1 VIEW ==================== -->
+        <div id="minigame1View" class="hidden app-view rounded-xl md:rounded-2xl shadow-lg md:shadow-xl overflow-hidden" style="background:#000; position:relative; min-height:600px;">
+            <div id="mg1-dynamic-bg"></div>
+            <div id="mg1-damage-overlay"></div>
+
+            <div id="mg1-app" class="p-4 flex flex-col" style="min-height:600px;">
+
+                <!-- Back button -->
+                <div class="flex justify-between items-center mb-2 relative z-10">
+                    <button onclick="backToGameMap()" class="text-slate-400 hover:text-white font-medium flex items-center gap-1 transition-colors text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        Bản Đồ Game
+                    </button>
+                </div>
+
+                <!-- TIMER -->
+                <div class="pb-3 relative z-10">
+                    <div class="flex justify-between items-center mb-1 px-1">
+                        <span class="text-slate-400 text-[11px] font-bold uppercase tracking-widest opacity-80">Phút Vàng Sơ Sinh</span>
+                        <span id="mg1-timer-text" class="text-2xl text-white font-mono font-semibold tracking-tighter">00:60</span>
+                    </div>
+                    <div class="mg1-timer-track"><div id="mg1-timer-bar"></div></div>
+                </div>
+
+                <!-- VITALS PANEL -->
+                <div class="mg1-glass-panel p-4 flex-shrink-0 relative z-10">
+                    <div class="flex justify-center items-center py-2">
+                        <div id="mg1-baby-emoji" class="mg1-emoji-center mg1-beat-normal">😴</div>
+                    </div>
+                    <div class="mg1-bento-grid">
+                        <div class="mg1-bento-item">
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1 flex justify-between">
+                                Nhịp tim <svg id="mg1-heart-icon" class="w-3 h-3 text-[#ff2d55]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            </span>
+                            <span id="mg1-hr-text" class="text-2xl text-white font-mono font-semibold">--</span>
+                        </div>
+                        <div class="mg1-bento-item">
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">SpO2 (Tay Phải)</span>
+                            <span id="mg1-spo2-text" class="text-2xl text-white font-mono font-semibold opacity-50">--%</span>
+                        </div>
+                        <div class="mg1-bento-item">
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">Nhịp thở</span>
+                            <span id="mg1-resp-text" class="text-sm font-medium text-slate-200">Chờ sinh</span>
+                        </div>
+                        <div class="mg1-bento-item">
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">Da / Trương lực</span>
+                            <span id="mg1-skin-text" class="text-sm font-medium text-slate-200">Chưa rõ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LOG -->
+                <div id="mg1-log-panel" class="flex flex-col justify-start relative z-10 my-2" style="min-height:80px; max-height:160px;">
+                    <div id="mg1-scenario-text" class="text-[15px] text-slate-100 leading-relaxed font-normal opacity-90"></div>
+                </div>
+
+                <!-- CHOICES -->
+                <div class="pt-2 pb-2 flex-shrink-0 z-20 relative">
+                    <div id="mg1-choices" class="flex flex-col gap-2"></div>
+                </div>
+
             </div>
         </div>
 
@@ -251,7 +464,6 @@
 
     <script>
         // ================= DATABASE CHO TRẮC NGHIỆM =================
-        // Chỉ lưu 13 chương để phục vụ làm quiz (không nhồi nhét tài liệu vào đây nữa)
         const allChaptersData = {
             1: {
                 title: "Chương 1: Giới thiệu khóa NLS",
@@ -360,7 +572,7 @@
                     { question: "Phát biểu: Mọi trẻ sơ sinh sinh non dưới 32 tuần tuổi thai đều bắt đầu hồi sức với nồng độ oxy hít vào (FiO2) tối thiểu là 40% để đảm bảo bão hòa oxy máu [7, 8].", isTrue: false, rationale: "Trẻ 28–32 tuần bắt đầu với 21–30% oxy; trẻ < 28 tuần bắt đầu với 30% oxy [7, 8].", hint: "NLS 2021 khuyến cáo mức FiO2 khởi đầu rất thận trọng để tránh độc tính oxy." },
                     { question: "Phát biểu: Khi thực hiện nở phổi thành công, dấu hiệu phục hồi đầu tiên và đáng tin cậy nhất là trẻ bắt đầu có cử động tay chân hoặc khóc lớn [8, 9].", isTrue: false, rationale: "Tăng nhịp tim (thường thấy trong 5–10 giây sau khi phổi nở) mới là dấu hiệu đáp ứng đầu tiên và quan trọng nhất [8, 9].", hint: "Cơ quan nào nhạy cảm nhất với oxy và phản ánh trực tiếp hiệu quả thông khí?" },
                     { question: "Phát biểu: Nếu nhịp tim không tăng sau 5 nhịp nở phổi đầu tiên, bước kế tiếp bắt buộc là phải tăng nồng độ oxy lên 100% trước khi thực hiện lại bất kỳ thao tác nào khác [10, 11].", isTrue: false, rationale: "Phải quay lại kiểm tra đường thở (vị trí đầu, mặt nạ, ấn hàm) và lặp lại 5 nhịp nở phổi trước khi thay đổi nồng độ oxy [10, 11].", hint: "Vấn đề thường nằm ở kỹ thuật (Airway) hay ở nồng độ Oxy?" },
-                    { question: "Phát biểu: Bắt đầu ấn tim ngay lập tức khi nghe nhịp tim dưới 60 lần/phút, bất kể lồng ngực có di động hay chưa [12, 13].", isTrue: false, rationale: "Chỉ ấn tim khi đã đảm bảo thông khí hiệu quả (lồng ngực di động) trong ít nhất 30 giây mà nhịp tim vẫn < 60 lần/phút [12, 13].", hint: "Ấn tim khi phổi chưa được oxy hóa có mang lại lợi ích gì không?" },
+                    { question: "Phát biểu: Bắt đầu ấn tim ngay lập tức khi nghe nhịp tim dưới 60 lần/phút, bất kể lồng ngực có di động hay chưa [12, 13].", isTrue: false, rationale: "Chỉ ấn tim khi đã đảm bảo thông khí hiệu quả (lồng ngực di động) trong ít nhất 30 giây mà nhịp tim < 60 lần/phút [12, 13].", hint: "Ấn tim khi phổi chưa được oxy hóa có mang lại lợi ích gì không?" },
                     { question: "Phát biểu: Khi bắt đầu tiến hành ấn tim, bắt buộc phải tăng nồng độ oxy hít vào (FiO2) lên mức 100% [7, 14].", isTrue: true, rationale: "Tăng oxy lên 100% khi nhịp tim không tăng dù thông khí hiệu quả hoặc khi cần ấn tim để đảm bảo máu về vành có oxy hóa tốt nhất [7, 14].", hint: "Đây là lúc tim cần oxy tối đa để phục hồi co bóp." },
                     { question: "Phát biểu: Sau khi phổi đã được nở hoàn toàn bằng 5 nhịp ban đầu, các nhịp giúp thở tiếp theo nên thực hiện với tần số 30 lần/phút [12, 15].", isTrue: true, rationale: "Sau khi phổi nở, chỉ cần duy trì nhịp bóp ngắn với tần số khoảng 30 lần/phút để duy trì trao đổi khí [12, 15].", hint: "Tần số này khác với nhịp thở sinh lý của trẻ." },
                     { question: "Phát biểu: Mục tiêu bão hòa oxy (SpO2) chấp nhận được đo ở tay phải tại thời điểm 5 phút sau sinh là 85% [12, 16].", isTrue: true, rationale: "Mục tiêu SpO2 là: 2 phút (65%), 5 phút (85%) và 10 phút (90%) [12, 16].", hint: "Đây là chỉ số bách phân vị thứ 25 của trẻ khỏe mạnh." },
@@ -548,7 +760,7 @@
                     { question: "Phát biểu: Xét nghiệm giải phẫu bệnh nhau thai được khuyến cáo thực hiện thường quy sau các ca hồi sức kéo dài để giúp tìm kiếm các nguyên nhân tiềm ẩn gây suy thai.", isTrue: true, rationale: "Kiểm tra mô học nhau thai có thể cung cấp bằng chứng quan trọng về lý do trẻ cần hồi sức, giúp định hướng điều trị và tiên lượng.", hint: "Nhau thai lưu giữ các bằng chứng về tình trạng nhiễm trùng hoặc các biến cố tuần hoàn trong tử cung." },
                     { question: "Phát biểu: Trong giao tiếp sau hồi sức, bác sĩ nên ưu tiên thông báo tình trạng trẻ cho người cha trước, sau đó người cha sẽ có trách nhiệm giải thích lại cho người mẹ để tránh gây sốc tâm lý cho sản phụ.", isTrue: false, rationale: "Lý tưởng nhất là thông báo cho cả cha và mẹ cùng lúc để đảm bảo thông tin nhất quán và cả hai cùng nhận được sự hỗ trợ tinh thần trực tiếp từ kíp y tế.", hint: "Giao tiếp trực tiếp và đồng thời là chìa khóa của sự đồng thuận." },
                     { question: "Phát biểu: Theo dõi độ bão hòa oxy liên tục là cực kỳ quan trọng để phát hiện sớm PPHN, một tình trạng mà máu không thể lên phổi được mà phải đổi dòng chảy qua lỗ bầu dục hoặc ống động mạch.", isTrue: true, rationale: "PPHN gây ra shunt phải-trái và làm nặng thêm tình trạng thiếu oxy máu, đòi hỏi phải theo dõi SpO2 sát sao để can thiệp kịp thời.", hint: "Đây là một trong những rối loạn chức năng cơ quan thường gặp sau stress thiếu oxy nặng." },
-                    { question: "Phát biểu: Nếu kết quả siêu âm não trong những ngày đầu sau hồi sức là bình thường, bác sĩ có thể tự tin khẳng định với cha mẹ rằng trẻ sẽ không có di chứng thần kinh về sau.", isTrue: false, rationale: "Không thể đưa ra tiên lượng tốt chỉ dựa trên siêu âm bình thường nếu tình trạng lâm sàng của trẻ xấu; MRI lúc đủ tháng có giá trị tiên lượng chính xác hơn nhiều.", hint: "Hãy so sánh giá trị tiên lượng của siêu âm và MRI trong bệnh lý não do thiếu máu thiếu oxy (HIE)." }
+                    { question: "Phát biểu: Nếu kết quả siêu âm não trong những ngày đầu sau hồi sức là bình thường, bác sĩ có thể tự tự khẳng định với cha mẹ rằng trẻ sẽ không có di chứng thần kinh về sau.", isTrue: false, rationale: "Không thể đưa ra tiên lượng tốt chỉ dựa trên siêu âm bình thường nếu tình trạng lâm sàng của trẻ xấu; MRI lúc đủ tháng có giá trị tiên lượng chính xác hơn nhiều.", hint: "Hãy so sánh giá trị tiên lượng của siêu âm và MRI trong bệnh lý não do thiếu máu thiếu oxy (HIE)." }
                 ]
             },
             12: {
@@ -588,7 +800,7 @@
                     { question: "Phát biểu: Nhận định tình huống yêu cầu người bác sĩ phải tập trung tối đa vào một thủ thuật duy nhất (như đặt nội khí quản) cho đến khi thành công mới quan sát xung quanh. [5, 6]", isTrue: false, rationale: "Tập trung quá mức vào một nhiệm vụ mà bỏ qua bức tranh tổng thể gọi là \"làm việc theo quán tính\" (fixation error), điều này đối lập với nhận định tình huống đúng nghĩa. [6]", hint: "Điều gì xảy ra nếu bạn chỉ nhìn vào cái ống nội khí quản mà bỏ qua nhịp tim đang rời rạc?" },
                     { question: "Phát biểu: Người lãnh đạo nhóm hồi sức bắt buộc phải là người có cấp bậc chuyên môn hoặc thâm niên cao nhất trong kíp trực tại thời điểm đó. [7]", isTrue: false, rationale: "Trưởng nhóm không nhất thiết là người có chuyên môn cao nhất, nhưng cả nhóm phải xác định rõ ai đang lãnh đạo và biết sự chuyển giao vai trò khi có người giỏi hơn đến hỗ trợ. [7]", hint: "Trưởng nhóm là người \"dẫn đường\", và vai trò này có thể được chuyển giao." },
                     { question: "Phát biểu: Những thành viên có cấp bậc thấp trong nhóm nên hạn chế phát biểu ý kiến để tránh gây nhiễu thông tin cho người lãnh đạo đang tập trung xử trí. [2, 8]", isTrue: false, rationale: "Mọi thành viên, bất kể cấp bậc, đều phải cảm thấy mạnh dạn nêu lên những quan sát quan trọng hoặc lo ngại về an toàn của trẻ. [2, 8]", hint: "Liệu một sinh viên thực tập có thể nhận ra vạch oxy đã cạn trước bác sĩ chính không?" },
-                    { question: "Phát biểu: Trong ma trận năng lực, người \"Tự tin nhưng không có năng lực\" được xem là đối tượng tiềm ẩn nguy cơ gây mất an toàn nhất cho bệnh nhi. [9]", isTrue: true, rationale: "Tự tự vượt quá khả năng thực tế sẽ dẫn đến việc thực hiện thủ thuật sai cách mà không yêu cầu hỗ trợ, gây nguy hiểm tính mạng cho trẻ. [9]", hint: "Đây là người không biết rằng mình không biết." },
+                    { question: "Phát biểu: Trong ma trận năng lực, người \"Tự tự nhưng không có năng lực\" được xem là đối tượng tiềm ẩn nguy cơ gây mất an toàn nhất cho bệnh nhi. [9]", isTrue: true, rationale: "Tự tự vượt quá khả năng thực tế sẽ dẫn đến việc thực hiện thủ thuật sai cách mà không yêu cầu hỗ trợ, gây nguy hiểm tính mạng cho trẻ. [9]", hint: "Đây là người không biết rằng mình không biết." },
                     { question: "Phát biểu: \"Bất đồng ý kiến\" (Disagreement) được hiểu là một cuộc tranh luận kịch liệt về quan điểm cá nhân khiến tiến trình hồi sức bị đình trệ. [10, 11]", isTrue: false, rationale: "Bất đồng ý kiến là sự khác biệt về phương án xử trí; lúc này trưởng nhóm cần quyết đoán đưa ra phương án thay thế để giảm thiểu chậm trễ. \"Tranh luận\" (Argument) mới là mức độ xung đột cao nhất gây đình trệ. [10, 11]", hint: "Hãy phân biệt giữa sự khác biệt về cách xử trí lâm sàng và sự xung đột về mục tiêu." },
                     { question: "Phát biểu: Một vòng giao tiếp hoàn chỉnh là khi người thực hiện phản hồi xác nhận lệnh của trưởng nhóm trước khi tiến hành thủ thuật. [11]", isTrue: true, rationale: "Việc nhắc lại lệnh giúp đảm bảo thông tin được tiếp nhận chính xác và tránh nhầm lẫn trong môi trường ồn ào của phòng sinh. [11]", hint: "\"Tôi sẽ đánh giá lại nhịp tim sau 5 nhịp bóp bóng của bác sĩ\"." },
                     { question: "Phát biểu: Để đạt đến điểm ổn định nhanh hơn, nhóm hồi sức nên thực hiện song song nhiều nhiệm vụ thay vì thực hiện tuần tự từng bước một. [12]", isTrue: true, rationale: "Làm việc đa nhiệm (Ủy quyền - Cộng tác - Phối hợp) giúp rút ngắn thời gian hồi sức đáng kể so với làm việc tuần tự. [12]", hint: "Một người gắn SpO2, một người giữ đường thở, một người chuẩn bị túi nilon." },
@@ -609,7 +821,7 @@
         };
 
         // ================= APP STATE =================
-        let currentMode = "HOME"; // "HOME", "QUIZ", "RESULT", "DOCUMENT_LIST", "DOCUMENT_DETAIL"
+        let currentMode = "HOME"; // "HOME", "QUIZ", "RESULT", "DOCUMENT_LIST", "DOCUMENT_DETAIL", "GAME", "MINIGAME_1"
         let currentQuizType = null; 
         let currentDocumentCategory = null;
         let questions = []; 
@@ -624,6 +836,8 @@
             resultArea: document.getElementById('resultArea'),
             documentListView: document.getElementById('documentListView'),
             documentDetailView: document.getElementById('documentDetailView'),
+            gameArea: document.getElementById('gameArea'), 
+            minigame1View: document.getElementById('minigame1View'), // View MiniGame1
             
             chapterGrid: document.getElementById('chapterGrid'),
             documentGrid: document.getElementById('documentGrid'),
@@ -666,7 +880,7 @@
 
         // ================= INITIALIZATION =================
         function initApp() {
-            renderChapterButtons(); // Render quiz grid
+            renderChapterButtons();
             switchView("HOME");
         }
 
@@ -712,6 +926,8 @@
             ui.resultArea.classList.add('hidden');
             ui.documentListView.classList.add('hidden');
             ui.documentDetailView.classList.add('hidden');
+            ui.gameArea.classList.add('hidden'); 
+            ui.minigame1View.classList.add('hidden'); 
             
             if (viewName === "HOME") {
                 ui.homeView.classList.remove('hidden');
@@ -723,12 +939,297 @@
                 ui.documentListView.classList.remove('hidden');
             } else if (viewName === "DOCUMENT_DETAIL") {
                 ui.documentDetailView.classList.remove('hidden');
+            } else if (viewName === "GAME") {
+                ui.gameArea.classList.remove('hidden');
+            } else if (viewName === "MINIGAME_1") {
+                ui.minigame1View.classList.remove('hidden');
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function goHome() {
             switchView("HOME");
+        }
+
+        // ================= GAME MAP LOGIC =================
+        function openGameMap() {
+            switchView("GAME");
+            setTimeout(() => { moveDoctorToNode(1); }, 100);
+        }
+
+        function moveDoctorToNode(level) {
+            const node = document.getElementById('gameNode' + level);
+            const character = document.getElementById('doctorCharacter');
+            if (node && character) {
+                const containerLeft = node.parentElement.parentElement.getBoundingClientRect().left;
+                const nodeLeft = node.getBoundingClientRect().left;
+                const relativeLeft = nodeLeft - containerLeft;
+                const offset = relativeLeft + (node.offsetWidth / 2) - (character.offsetWidth / 2);
+                
+                character.style.transform = `translateX(${offset}px) translateY(-50%)`;
+            }
+        }
+
+        function openMinigame(level) {
+            moveDoctorToNode(level);
+            
+            setTimeout(() => {
+                if(level === 1) {
+                    switchView("MINIGAME_1");
+                    initMinigame1();
+                } else {
+                    alert("Đang tải dữ liệu Game Trạm " + level + "...\n(Mã nguồn game sẽ được cập nhật sau theo yêu cầu của bạn)");
+                }
+            }, 800);
+        }
+
+        // ================= MINIGAME 1 LOGIC (iOS Edition) =================
+        let mg1_timeLeft = 60;
+        let mg1_gameActive = false;
+        let mg1_countdown;
+        let mg1_mistakes = 0;
+        let mg1_penaltyTriggered = false;
+        let mg1_fastHrDrop = false;
+        let mg1_airwayBlocked = false;
+        let mg1_fluidNotCleared = false;
+
+        function backToGameMap() {
+            clearInterval(mg1_countdown);
+            mg1_gameActive = false;
+            switchView('GAME');
+        }
+
+        function initMinigame1() {
+            mg1_mistakes = 0;
+            mg1_penaltyTriggered = false;
+            mg1_fastHrDrop = false;
+            mg1_airwayBlocked = false;
+            mg1_fluidNotCleared = false;
+            mg1_startTimer();
+            mg1_updateGame(0);
+        }
+
+        function mg1_triggerDamageFlash() {
+            const overlay = document.getElementById('mg1-damage-overlay');
+            overlay.classList.add('mg1-flash-damage');
+            if (navigator.vibrate) navigator.vibrate(50);
+            setTimeout(() => { overlay.classList.remove('mg1-flash-damage'); }, 100);
+        }
+
+        function mg1_startTimer() {
+            mg1_timeLeft = 60;
+            mg1_gameActive = true;
+            clearInterval(mg1_countdown);
+            const timerText = document.getElementById('mg1-timer-text');
+            const timerBar = document.getElementById('mg1-timer-bar');
+            timerBar.style.backgroundColor = '#38bdf8';
+            timerText.style.color = '#fff';
+            mg1_countdown = setInterval(() => {
+                if (!mg1_gameActive) return;
+                mg1_timeLeft--;
+                mg1_renderTimerUI();
+                if (mg1_timeLeft <= 0) {
+                    clearInterval(mg1_countdown);
+                    mg1_evaluateRank('F', "Thời gian Phút Vàng đã cạn kiệt. Trẻ suy tuần hoàn không hồi phục.");
+                }
+            }, 1000);
+        }
+
+        function mg1_renderTimerUI() {
+            const timerText = document.getElementById('mg1-timer-text');
+            const timerBar = document.getElementById('mg1-timer-bar');
+            const displayTime = mg1_timeLeft < 0 ? 0 : mg1_timeLeft;
+            timerText.innerText = `00:${displayTime < 10 ? '0' + displayTime : displayTime}`;
+            timerBar.style.width = `${(displayTime / 60) * 100}%`;
+            if (displayTime <= 15) {
+                timerBar.style.backgroundColor = '#ff453a';
+                timerText.style.color = '#ff453a';
+            } else if (displayTime <= 30) {
+                timerBar.style.backgroundColor = '#ffd60a';
+                timerText.style.color = '#ffd60a';
+            }
+        }
+
+        function mg1_applyTimePenalty(seconds) {
+            mg1_timeLeft -= seconds;
+            const timerText = document.getElementById('mg1-timer-text');
+            timerText.classList.remove('mg1-time-penalty');
+            void timerText.offsetWidth;
+            timerText.classList.add('mg1-time-penalty');
+            mg1_renderTimerUI();
+            mg1_triggerDamageFlash();
+        }
+
+        function mg1_setVitals(hr, spo2, resp, skinLabel, state) {
+            document.getElementById('mg1-hr-text').innerText = hr === 0 ? "00" : hr;
+            document.getElementById('mg1-hr-text').className = `text-2xl font-mono font-semibold ${hr < 60 ? 'text-[#ff453a]' : 'text-white'}`;
+            const spo2El = document.getElementById('mg1-spo2-text');
+            spo2El.innerText = spo2;
+            spo2El.className = `text-2xl font-mono font-semibold ${spo2 === 'Dò...' ? 'opacity-50 text-white' : 'text-[#32d74b]'}`;
+            document.getElementById('mg1-resp-text').innerText = resp;
+            document.getElementById('mg1-resp-text').className = `text-sm font-medium ${resp === 'Ngưng thở' ? 'text-[#ff453a]' : 'text-slate-200'}`;
+            const skinText = document.getElementById('mg1-skin-text');
+            skinText.innerText = skinLabel;
+            const babyEmoji = document.getElementById('mg1-baby-emoji');
+            const bg = document.getElementById('mg1-dynamic-bg');
+            if (state === 'cyanosis') {
+                babyEmoji.innerText = '😨';
+                babyEmoji.className = "mg1-emoji-center mg1-skin-cyanosis mg1-beat-slow";
+                skinText.className = "text-sm font-medium text-[#bf5af2]";
+                bg.style.background = "radial-gradient(circle at 50% 30%, rgba(191, 90, 242, 0.15) 0%, rgba(0, 0, 0, 1) 70%)";
+            } else if (state === 'pale') {
+                babyEmoji.innerText = '😱';
+                babyEmoji.className = "mg1-emoji-center mg1-skin-pale mg1-beat-pale";
+                skinText.className = "text-sm font-medium text-slate-400";
+                bg.style.background = "radial-gradient(circle at 50% 30%, rgba(148, 163, 184, 0.15) 0%, rgba(0, 0, 0, 1) 70%)";
+            } else if (state === 'pink') {
+                babyEmoji.innerText = '😭';
+                babyEmoji.className = "mg1-emoji-center mg1-beat-fast";
+                skinText.className = "text-sm font-medium text-[#ff2d55]";
+                bg.style.background = "radial-gradient(circle at 50% 30%, rgba(255, 45, 85, 0.15) 0%, rgba(0, 0, 0, 1) 70%)";
+            } else if (state === 'stop') {
+                babyEmoji.innerText = '😵';
+                babyEmoji.className = "mg1-emoji-center mg1-skin-dead mg1-beat-stop";
+                skinText.className = "text-sm font-medium text-[#ff453a]";
+                bg.style.background = "radial-gradient(circle at 50% 30%, rgba(255, 69, 58, 0.2) 0%, rgba(0, 0, 0, 1) 70%)";
+            } else {
+                babyEmoji.innerText = '😴';
+                babyEmoji.className = "mg1-emoji-center mg1-beat-normal";
+                skinText.className = "text-sm font-medium text-slate-200";
+                bg.style.background = "radial-gradient(circle at 50% 30%, rgba(56, 189, 248, 0.15) 0%, rgba(0, 0, 0, 1) 70%)";
+            }
+        }
+
+        function mg1_printSituation(text) {
+            const el = document.getElementById('mg1-scenario-text');
+            el.innerHTML = '';
+            void el.offsetWidth;
+            el.innerHTML = `<div class="mg1-fade-in">${text}</div>`;
+            const logPanel = document.getElementById('mg1-log-panel');
+            setTimeout(() => { logPanel.scrollTop = 0; }, 10);
+        }
+
+        function mg1_addBtn(text, action) {
+            const container = document.getElementById('mg1-choices');
+            const btn = document.createElement('button');
+            btn.className = "mg1-btn";
+            btn.innerHTML = text.replace(/^[A-B]\.\s'?(.*?)[']?$/, "<span class='mg1-btn-highlight'>$1</span>");
+            btn.onclick = () => { container.innerHTML = ''; action(); };
+            container.appendChild(btn);
+        }
+
+        function mg1_determineRank() {
+            if (mg1_mistakes === 0) return 'S';
+            if (mg1_mistakes <= 1 && !mg1_airwayBlocked && !mg1_fastHrDrop) return 'A';
+            return 'B';
+        }
+
+        function mg1_evaluateRank(rank, forceMessage = null) {
+            mg1_gameActive = false;
+            clearInterval(mg1_countdown);
+            let finalTitle = "", finalDesc = "";
+            switch(rank) {
+                case 'S':
+                    mg1_setVitals(120, "70%", "Khóc to", "Hồng hào", 'pink');
+                    finalTitle = "HẠNG S — XUẤT SẮC";
+                    finalDesc = "Quyết định chuẩn xác tuyệt đối. Bệnh nhi vượt qua Phút Vàng an toàn với chức năng sinh lý nguyên vẹn.";
+                    break;
+                case 'A':
+                    mg1_setVitals(100, "65%", "Thở rên", "Hồng nhạt", 'pink');
+                    finalTitle = "HẠNG A — TỐT";
+                    finalDesc = "Bạn đã cứu bé thành công. Còn vài thao tác chưa tối ưu làm chậm nhịp hồi sức, bé cần theo dõi thêm tại NICU.";
+                    break;
+                case 'B':
+                    mg1_setVitals(80, "50%", "Thở máy", "Tím nhẹ", 'cyanosis');
+                    finalTitle = "HẠNG B — CẦN CẢI THIỆN";
+                    finalDesc = "Bé đã qua cơn nguy kịch nhưng hồi sức kéo dài do lỗi nền tảng. Có rủi ro tổn thương não do thiếu oxy mô.";
+                    break;
+                case 'F':
+                    mg1_setVitals(0, "--", "Ngưng thở", "Trắng bệch", 'stop');
+                    finalTitle = "HẠNG F — THẤT BẠI";
+                    finalDesc = forceMessage || "Ấn tim khi phổi chưa nở làm kiệt quệ hoàn toàn cung lượng tim. Hồi sức thất bại.";
+                    break;
+            }
+            mg1_printSituation(`
+                <div class="text-center mb-5 mt-2">
+                    <span class="text-[11px] font-bold tracking-[0.2em] uppercase text-slate-500 block mb-1">Kết Quả Đánh Giá</span>
+                    <span class="text-2xl font-bold tracking-tight ${rank === 'F' ? 'text-[#ff453a]' : (rank === 'S' ? 'text-[#ffd60a]' : 'text-white')}">${finalTitle}</span>
+                </div>
+                <div class="text-[15px] text-slate-300 text-center leading-relaxed px-2">${finalDesc}</div>
+            `);
+            document.getElementById('mg1-choices').innerHTML = `<button class="mg1-btn !text-center font-semibold text-white mt-4" style="background:#007aff;border:none;" onclick="initMinigame1()">Khởi động lại ca trực</button>`;
+        }
+
+        function mg1_updateGame(step) {
+            document.getElementById('mg1-choices').innerHTML = "";
+            switch(step) {
+                case 0:
+                    mg1_setVitals('--', '--', 'Chờ sinh', 'Trong bụng', 'normal');
+                    mg1_printSituation("Sản phụ 39 tuần, ối vỡ, sa dây rốn. Tim thai suy.<br><br>Bác sĩ sản ra hiệu chuẩn bị đón bé. Y lệnh phân công ê-kíp?");
+                    mg1_addBtn("A. Mọi người chuẩn bị! Ai ở đâu làm việc đó, tập trung cứu bé!", () => {
+                        mg1_mistakes++; mg1_penaltyTriggered = true;
+                        mg1_applyTimePenalty(5);
+                        mg1_updateGame(1);
+                    });
+                    mg1_addBtn("B. SBAR: Bé đủ tháng, sa rốn. Tôi giữ đường thở, Smith đo SpO2 tay phải, Hộ sinh chuẩn bị thuốc!", () => {
+                        mg1_updateGame(1);
+                    });
+                    break;
+                case 1:
+                    mg1_setVitals(50, 'Dò...', 'Ngưng thở', 'Tím toàn thân', 'cyanosis');
+                    let story1 = "Bé vừa sổ. Toàn thân tím ngắt, mềm nhũn, hoàn toàn không có nỗ lực thở.";
+                    if (mg1_penaltyTriggered) story1 = "Phân công lỏng lẻo khiến ê-kíp lúng túng mất vài giây.<br><br>" + story1;
+                    mg1_printSituation(story1 + "<br><br>Nhịp tim đếm qua cuống rốn là 50 l/p. Hành động?");
+                    mg1_addBtn("A. Cắt rốn ngay lập tức! Đưa nhanh về bàn hồi sức.", () => {
+                        mg1_mistakes++; mg1_fastHrDrop = true; mg1_triggerDamageFlash();
+                        mg1_updateGame(2);
+                    });
+                    mg1_addBtn("B. Giữ bé trên bụng mẹ. Lau khô, kích thích, chờ 60 giây mới kẹp rốn.", () => {
+                        mg1_updateGame(2);
+                    });
+                    break;
+                case 2:
+                    let hr2 = mg1_fastHrDrop ? 30 : 45;
+                    let skin2 = mg1_fastHrDrop ? 'Trắng bệch' : 'Tím tái';
+                    let state2 = mg1_fastHrDrop ? 'pale' : 'cyanosis';
+                    mg1_setVitals(hr2, 'Dò...', 'Ngưng thở', skin2, state2);
+                    let story2 = "Đã đưa bé ra bàn hồi sức. Bệnh nhi vẫn ngưng thở.";
+                    if (mg1_fastHrDrop) story2 = "Do cắt rốn quá sớm, bệnh nhi mất đột ngột trương lực. Da chuyển trắng bệch, mạch bẹn rất yếu.<br><br>" + story2;
+                    mg1_printSituation(story2 + "<br><br>Bước A (Airway): Bạn đặt tư thế đầu như thế nào?");
+                    mg1_addBtn("A. Ngửa cổ bé ra sau tối đa để mở toang đường thở.", () => {
+                        mg1_mistakes++; mg1_airwayBlocked = true; mg1_triggerDamageFlash();
+                        mg1_updateGame(3);
+                    });
+                    mg1_addBtn("B. Chêm cuộn khăn 2cm dưới vai, giữ tư thế trung gian (Sniffing).", () => {
+                        mg1_updateGame(3);
+                    });
+                    break;
+                case 3:
+                    let curHr = parseInt(document.getElementById('mg1-hr-text').innerText) || 40;
+                    let curState = document.getElementById('mg1-skin-text').innerText === 'Trắng bệch' ? 'pale' : 'cyanosis';
+                    mg1_setVitals(Math.max(curHr - 5, 10), '30%', 'Ngưng thở', document.getElementById('mg1-skin-text').innerText, curState);
+                    let story3 = "Đã chỉnh tư thế đầu.";
+                    if (mg1_airwayBlocked) story3 += " Góc hàm mở rất rộng.";
+                    mg1_printSituation(story3 + "<br><br>Phổi đang chứa đầy dịch ối. Bước B (Breathing): Kỹ thuật bóp bóng qua mặt nạ?");
+                    mg1_addBtn("A. Bóp bóng nhanh và liên tục 60 lần/phút để đẩy oxy vào.", () => {
+                        mg1_mistakes++; mg1_fluidNotCleared = true; mg1_triggerDamageFlash();
+                        mg1_updateGame(4);
+                    });
+                    mg1_addBtn("B. Bóp 5 nhịp nở phổi. Kéo dài 2-3s mỗi nhịp (Bóp... 2... 3... thả).", () => {
+                        mg1_updateGame(4);
+                    });
+                    break;
+                case 4:
+                    mg1_setVitals(20, '< 30%', 'Ngưng thở', 'Nhợt nhạt', 'pale');
+                    mg1_printSituation("Vừa hoàn thành loạt bóp bóng.<br><br><strong>Nhưng lồng ngực KHÔNG di động.</strong><br>Nhịp tim rớt thảm hại xuống dưới 40 l/p.<br><br>Báo động! Xử trí tiếp theo?");
+                    mg1_addBtn("A. Rút ống nghe, bắt đầu ấn tim ngoài lồng ngực ngay lập tức!", () => {
+                        mg1_evaluateRank('F');
+                    });
+                    mg1_addBtn("B. Khoan đã! Phổi chưa nở. Kiểm tra lại 3P (Vị trí - Áp lực - Nâng hàm) rồi làm lại 5 nhịp nở phổi.", () => {
+                        mg1_evaluateRank(mg1_determineRank());
+                    });
+                    break;
+            }
         }
 
         // ================= DOCUMENT LOGIC =================
@@ -743,7 +1244,6 @@
             if (category === 'THEORY') {
                 listHeaderBadge.textContent = "THƯ VIỆN LÝ THUYẾT";
                 listTitle.textContent = "Chọn Infographic Lý Thuyết";
-                // Lấy 13 chương từ cơ sở dữ liệu để vẽ nút
                 for (let i = 1; i <= 13; i++) {
                     const titleText = allChaptersData[i].title.replace(`Chương ${i}: `, '');
                     const imgName = `Chương ${i}.jpg`;
@@ -752,7 +1252,6 @@
             } else if (category === 'SKILL') {
                 listHeaderBadge.textContent = "THƯ VIỆN KỸ NĂNG";
                 listTitle.textContent = "Chọn Infographic Kỹ Năng";
-                // Lấy 13 chương kỹ năng (Tên chương mượn từ cơ sở dữ liệu)
                 for (let i = 1; i <= 13; i++) {
                     const titleText = allChaptersData[i].title.replace(`Chương ${i}: `, '');
                     const imgName = `Kỹ Năng Chương ${i}.jpg`;
@@ -761,11 +1260,10 @@
             } else if (category === 'APPENDIX') {
                 listHeaderBadge.textContent = "THƯ VIỆN PHỤ LỤC";
                 listTitle.textContent = "Chọn Phụ Lục";
-                // 3 phụ lục tùy chỉnh
                 const appendices = [
-                    { id: 'A', title: 'Thuốc & Dịch truyền' },
-                    { id: 'B', title: 'Lưu đồ thuật toán NLS' },
-                    { id: 'C', title: 'Bảng kiểm thiết bị & Kỹ năng' }
+                    { id: 'A', title: 'Những vấn đề tranh cãi và những vấn đề nhỏ khác' },
+                    { id: 'B', title: 'Các thủ thuật thực hành' },
+                    { id: 'C', title: 'Dụng cụ' }
                 ];
                 for (const app of appendices) {
                     const imgName = `Phụ Lục ${app.id}.jpg`;
@@ -777,12 +1275,10 @@
         }
 
         function createDocumentButton(category, badgeText, titleText, imgName) {
-            // Encode strings safely for HTML attribute
             const safeBadge = badgeText.replace(/'/g, "\\'");
             const safeTitle = titleText.replace(/'/g, "\\'");
             const safeImg = imgName.replace(/'/g, "\\'");
             
-            // Đổi màu hover tùy theo nhóm cho đẹp mắt
             let colorClasses = "hover:border-teal-400 hover:bg-teal-50 text-teal-600 group-hover:text-teal-800";
             if(category === 'SKILL') colorClasses = "hover:border-orange-400 hover:bg-orange-50 text-orange-600 group-hover:text-orange-800";
             if(category === 'APPENDIX') colorClasses = "hover:border-purple-400 hover:bg-purple-50 text-purple-600 group-hover:text-purple-800";
@@ -803,11 +1299,10 @@
             ui.documentTitleBadge.textContent = badgeText;
             ui.documentTitle.textContent = titleText;
             
-            // Xử lý logic tên file & phòng ngừa lỗi
             ui.documentImage.src = encodeURI(imgName);
             
             ui.documentImage.onerror = function() {
-                this.onerror = null; // Tránh loop vô hạn
+                this.onerror = null; 
                 const errText = `Chưa+Tìm+Thấy+Ảnh+${encodeURIComponent(imgName)}`;
                 this.src = `https://placehold.co/800x1200/f87171/ffffff?text=${errText}`;
             };
